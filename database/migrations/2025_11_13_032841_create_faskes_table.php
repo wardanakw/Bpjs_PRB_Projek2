@@ -19,7 +19,13 @@ return new class extends Migration
                 $table->string('kabupaten')->nullable();
                 $table->string('provinsi')->nullable();
                 $table->string('kode_pos')->nullable();
-                $table->foreignId('user_id')->constrained('users', 'id_user')->onDelete('cascade');
+               $table->unsignedBigInteger('user_id');
+
+$table->foreign('user_id')
+      ->references('id_user')
+      ->on('users')
+      ->onDelete('cascade');
+
                 $table->timestamps();
             });
         }

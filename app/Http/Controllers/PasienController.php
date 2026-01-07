@@ -14,7 +14,13 @@ class PasienController extends Controller
 {
    public function index(Request $request)
 {
-    $query = Patient::with('diagnosaPrb');
+   $query = Patient::with([
+    'diagnosaPrb' => function ($q) {
+        $q->orderByDesc('tgl_pelayanan')
+          ->limit(1); 
+    }
+])->whereHas('diagnosaPrb');
+
 
     if (auth()->user()->role === 'rumah_sakit') {
         if (auth()->user()->rumah_sakit_id) {

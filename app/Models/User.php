@@ -13,6 +13,9 @@ class User extends Authenticatable
     protected $table = 'users';
     protected $primaryKey = 'id_user';
 
+    public $incrementing = true;   
+    protected $keyType = 'int';
+
     protected $fillable = [
         'name',
         'username',
@@ -31,10 +34,7 @@ class User extends Authenticatable
     public $timestamps = true;
 
     
-    public function setPasswordAttribute($value)
-    {
-        $this->attributes['password'] = bcrypt($value);
-    }
+
    public function faskes()
 {
     return $this->hasOne(Faskes::class, 'user_id', 'id_user');
@@ -44,6 +44,5 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Faskes::class, 'rumah_sakit_id', 'id');
     }
-
 
 }

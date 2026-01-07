@@ -27,14 +27,15 @@ class AuthController extends Controller
                             
    public function login(Request $request)
 {
+  
     $request->validate([
         'username' => 'required|string',
         'password' => 'required|string',
         'captcha'  => 'required|captcha',
     ], [
         'captcha.captcha' => 'Kode captcha salah. Silakan coba lagi.',
-    ]);
-
+    ]);    
+    
     $user = User::where('username', $request->username)->first();
     
 
@@ -42,18 +43,30 @@ class AuthController extends Controller
         return back()->withErrors(['login_error' => 'Username atau password salah.']);
     }
 
+    Log::info('Login attempt', [
+        'username' => $request->username,
+        'password_match' => $user ? Hash::check($request->password, $user->password) : null,
+    ]);
+
+    Log::info('Login input', [
+        'input_username' => $request->username,
+        'input_password' => $request->password,
+    ]);
+
     $guard = $user->role;
     Auth::guard($guard)->login($user);
+    Auth::shouldUse($guard);
 
     $request->session()->regenerate();
 
-    Auth::setDefaultDriver($guard);
     Log::info('AuthController@login', [
         'user_id' => $user->{$user->getKeyName()} ?? null,
         'username' => $user->username ?? null,
         'role' => $user->role ?? null,
         'guard_used' => $guard,
         'guard_check' => Auth::guard($guard)->check(),
+        'session_id' => session()->getId(),
+        'session_cookie' => config('session.cookie'),
     ]);
 
     $routeName = null;

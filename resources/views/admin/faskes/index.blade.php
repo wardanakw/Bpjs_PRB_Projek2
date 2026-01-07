@@ -53,6 +53,7 @@
                 <th>Nama</th>
                 <th>Role</th>
                 <th>Alamat</th>
+                <th>Nomor PIC</th>
                 <th>Username</th>
                 <th>Aksi</th>
             </tr>
@@ -69,6 +70,7 @@
                     </td>
 
                     <td>{{ $item->alamat_faskes }}</td>
+                    <td>{{ $item->nomor_pic ?? '-' }}</td>
                     <td>{{ $item->user->username ?? 'Tidak ada username' }}</td>
                     <td>
                         @if($item->user->role === 'rumah_sakit')

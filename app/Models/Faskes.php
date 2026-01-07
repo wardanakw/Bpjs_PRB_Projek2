@@ -20,6 +20,7 @@ class Faskes extends Model
         'kabupaten',
         'provinsi',
         'kode_pos',
+        'nomor_pic',
         'user_id',
     ];
 

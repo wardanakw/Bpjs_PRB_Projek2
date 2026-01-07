@@ -24,8 +24,8 @@ class RelasiFktpApotekImport implements OnEachRow, WithChunkReading
         RelasiFktpApotek::create([
             'kode_fktp'   => $r[0] ?? '',
             'nama_fktp'   => $r[1] ?? '',
-            'nama_apotek' => $r[2] ?? '',
-            'kode_apotek' => $r[3] ?? '',
+            'nama_apotek' => $r[3] ?? '',
+            'kode_apotek' => $r[2] ?? '',
         ]);
     }
 

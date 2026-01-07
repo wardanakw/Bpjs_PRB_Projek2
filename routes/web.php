@@ -15,24 +15,6 @@ use App\Http\Controllers\FktpDashboardController;
 
 Route::get('captcha/{config?}', [CaptchaController::class, 'getCaptcha'])->name('captcha');
 
-if (config('app.debug')) {
-    Route::get('/debug-auth', function () {
-        $guards = array_keys(config('auth.guards'));
-        $result = [];
-        foreach ($guards as $guard) {
-            $authGuard = \Illuminate\Support\Facades\Auth::guard($guard);
-            $user = $authGuard->user();
-            $result[$guard] = [
-                'check' => $authGuard->check(),
-                'user' => $user ? $user->only(['id_user','username','role','fktp_kode','kode_apotek']) : null,
-            ];
-        }
-        $defaultUser = \Illuminate\Support\Facades\Auth::user();
-        $result['default'] = $defaultUser ? $defaultUser->only(['id_user','username','role']) : null;
-        return response()->json($result);
-    });
-}
-
 Route::middleware('guest')->group(function () {
     Route::get('/', fn() => redirect()->route('login'));
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');

@@ -129,6 +129,7 @@
                 $listDiagnosa = ['Diabetes Melitus','Hipertensi','Penyakit Jantung','Asma','PPOK','Epilepsi','Skizofrenia','Stroke','SLE'];
                 $selectedDiagnosa = old('diagnosa');
                 $diagnosaLain = old('diagnosa_lain');
+                $defaultStatus = old('status_prb') ?? (empty($pasien->no_kunjungan) ? 'Tidak Aktif' : null);
             @endphp
 
             <form id="formDiagnosa" action="{{ route('pasien.storeDiagnosis', $pasien->id_pasien) }}" method="POST" enctype="multipart/form-data">
@@ -175,11 +176,11 @@
                         <select name="status_prb" class="form-control" required>
                             <option value="">-- Pilih Status --</option>
                             @if($isCorrectFktp)
-                                <option value="Aktif" {{ old('status_prb') === 'Aktif' ? 'selected' : '' }}>Aktif</option>
+                                <option value="Aktif" {{ $defaultStatus === 'Aktif' ? 'selected' : '' }}>Aktif</option>
                             @else
                                 <option value="" disabled style="color: #6c757d;">Aktif (Hanya bisa diaktifkan oleh FKTP {{ $pasien->fktp_asal }})</option>
                             @endif
-                            <option value="Tidak Aktif" {{ old('status_prb') === 'Tidak Aktif' ? 'selected' : '' }}>Tidak Aktif</option>
+                            <option value="Tidak Aktif" {{ $defaultStatus === 'Tidak Aktif' ? 'selected' : '' }}>Tidak Aktif</option>
                         </select>
                         @if(!$isCorrectFktp)
                             <small class="text-warning">

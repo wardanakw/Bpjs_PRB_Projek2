@@ -230,23 +230,47 @@ body {
                                         <td><span class="badge bg-success">{{ $diagnosa->status_prb }}</span></td>
                                               <td class="text-start">
     @if($diagnosa->obatPrb && $diagnosa->obatPrb->count())
-        <ul class="list-unstyled mb-0">
-            @php
-                // Filter obat yang belum diklaim (untuk tampilan)
-                $obatBelumKlaim = auth()->user()->role === 'apotek' 
-                    ? $diagnosa->obatPrb->where('is_klaim', false) 
-                    : $diagnosa->obatPrb;
-            @endphp
-            @foreach($obatBelumKlaim as $obat)
-                <li class="mb-2">
-                    <strong>{{ $obat->nama_obat }}</strong><br>
-                    Jumlah: {{ $obat->jumlah_obat ?? '-' }} 
-                    {{ $obat->satuan ?? 'tablet' }}<br>
-                    Dosis: {{ $obat->dosis_obat ?? '-' }}<br>
-                    Aturan Pakai: {{ $obat->aturan_pakai ?? '-' }}
-                </li>
-            @endforeach
-        </ul>
+        @php
+            $obatBelumKlaim = auth()->user()->role === 'apotek'
+                ? $diagnosa->obatPrb->where('is_klaim', false)
+                : $diagnosa->obatPrb;
+        @endphp
+
+        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#obatModal-{{ $diagnosa->id_diagnosa }}">
+            <i class="bi bi-eye"></i> Lihat Obat ({{ $obatBelumKlaim->count() }})
+        </button>
+
+        <!-- Modal: Obat per Diagnosa -->
+        <div class="modal fade" id="obatModal-{{ $diagnosa->id_diagnosa }}" tabindex="-1" aria-labelledby="obatModalLabel-{{ $diagnosa->id_diagnosa }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="obatModalLabel-{{ $diagnosa->id_diagnosa }}">Daftar Obat - PRB {{ $diagnosa->id_diagnosa }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        @if($obatBelumKlaim && $obatBelumKlaim->count())
+                            <ul class="list-group">
+                                @foreach($obatBelumKlaim as $obat)
+                                    <li class="list-group-item">
+                                        <div>
+                                            <strong>{{ $obat->nama_obat }}</strong><br>
+                                            <small>Jumlah: {{ $obat->jumlah_obat ?? '-' }} {{ $obat->satuan ?? 'tablet' }}</small><br>
+                                            <small>Dosis: {{ $obat->dosis_obat ?? '-' }} — Aturan: {{ $obat->aturan_pakai ?? '-' }}</small>
+                                        </div>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @else
+                            <p class="text-muted">Belum ada obat untuk diagnosa ini</p>
+                        @endif
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     @else
         <span class="text-muted">Belum ada obat untuk diagnosa ini</span>
     @endif
@@ -325,17 +349,37 @@ body {
                                         </td>
                                               <td class="text-start">
     @if($diagnosa->obatPrb && $diagnosa->obatPrb->count())
-        <ul class="list-unstyled mb-0">
-            @foreach($diagnosa->obatPrb as $obat)
-                <li class="mb-2">
-                    <strong>{{ $obat->nama_obat }}</strong><br>
-                    Jumlah: {{ $obat->jumlah_obat ?? '-' }} 
-                    {{ $obat->satuan ?? 'tablet' }}<br>
-                    Dosis: {{ $obat->dosis_obat ?? '-' }}<br>
-                    Aturan Pakai: {{ $obat->aturan_pakai ?? '-' }}
-                </li>
-            @endforeach
-        </ul>
+        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#obatModal-{{ $diagnosa->id_diagnosa }}">
+            <i class="bi bi-eye"></i> Lihat Obat ({{ $diagnosa->obatPrb->count() }})
+        </button>
+
+        <!-- Modal: Obat per Diagnosa -->
+        <div class="modal fade" id="obatModal-{{ $diagnosa->id_diagnosa }}" tabindex="-1" aria-labelledby="obatModalLabel-{{ $diagnosa->id_diagnosa }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="obatModalLabel-{{ $diagnosa->id_diagnosa }}">Daftar Obat - PRB {{ $diagnosa->id_diagnosa }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <ul class="list-group">
+                            @foreach($diagnosa->obatPrb as $obat)
+                                <li class="list-group-item">
+                                    <div>
+                                        <strong>{{ $obat->nama_obat }}</strong><br>
+                                        <small>Jumlah: {{ $obat->jumlah_obat ?? '-' }} {{ $obat->satuan ?? 'tablet' }}</small><br>
+                                        <small>Dosis: {{ $obat->dosis_obat ?? '-' }} — Aturan: {{ $obat->aturan_pakai ?? '-' }}</small>
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     @else
         <span class="text-muted">Belum ada obat untuk diagnosa ini</span>
     @endif

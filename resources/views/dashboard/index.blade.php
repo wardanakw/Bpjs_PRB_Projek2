@@ -90,166 +90,71 @@
 
 
 </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+document.addEventListener('DOMContentLoaded', () => {
 
-    const ctx1 = document.getElementById('chartMonth').getContext('2d');
-    const monthData = @json(array_values($kunjunganPerBulan));
-  const monthLabels = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    /* ========= BULANAN ========= */
+    const monthCanvas = document.getElementById('chartMonth');
+    if (monthCanvas) {
+        try {
+            const monthData = @json(array_values($kunjunganPerBulan));
+            const monthLabels = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 
-    const chartMonth = new Chart(ctx1, {
-      type: 'bar',
-      data: {
-          labels: monthLabels,
-          datasets: [{
-              label: 'Kunjungan',
-              data: monthData,
-              backgroundColor: 'rgba(0, 123, 255, 0.8)',
-              borderColor: '#007bff',
-              borderWidth: 1,
-              borderRadius: 8,
-              hoverBackgroundColor: 'rgba(0, 123, 255, 1)'
-          }]
-      },
-      options: {
-          maintainAspectRatio: false,
-          responsive: true,
-          interaction: { mode: 'nearest', intersect: false },
-          plugins: {
-              tooltip: {
-                  enabled: true,
-                  backgroundColor: '#333',
-                  titleColor: '#fff',
-                  bodyColor: '#fff',
-                  padding: 10,
-                  displayColors: false,
-                  callbacks: {
-                      label: (ctx) => ` ${ctx.parsed.y} Kunjungan`
-                  }
-              },
-              legend: { display: false }
-          },
-          scales: {
-              x: {
-                  grid: { display: false }
-              },
-              y: {
-                  beginAtZero: true,
-                  ticks: { stepSize: 20 }
-              }
-          }
-      }
-  });
-
-
-  const ctx2 = document.getElementById('chartWeek').getContext('2d');
-    const weekData = @json(array_values($kunjunganPerMinggu));
-
-    const chartWeek = new Chart(ctx2, {
-      type: 'bar',
-      data: {
-        labels: ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'],
-        datasets: [{
-          label: 'Kunjungan',
-          data: weekData,
-          backgroundColor: ['#4CAF50', '#FF9800', '#F44336', '#2196F3', '#9C27B0', '#00BCD4', '#FFC107'],
-          borderRadius: 6,
-          hoverBackgroundColor: ['#43A047', '#FB8C00', '#E53935', '#1976D2', '#8E24AA', '#00ACC1', '#FFB300']
-        }]
-      },
-      options: {
-          maintainAspectRatio: false,
-          responsive: true,
-          plugins: {
-              tooltip: {
-                  enabled: true,
-                  backgroundColor: '#333',
-                  titleColor: '#fff',
-                  bodyColor: '#fff',
-                  displayColors: false,
-                  callbacks: {
-                      label: (ctx) => ` ${ctx.parsed.y} Kunjungan`
-                  }
-              },
-              legend: { display: false }
-          },
-          scales: {
-              y: { beginAtZero: true, ticks: { stepSize: 5 } },
-              x: { grid: { display: false } }
-          }
-      }
-  });
-
- 
-  async function fetchDashboardData() {
-    try {
-      const res = await fetch("/dashboard/data");
-      if (!res.ok) return;
-      const data = await res.json();
-
-      if (data.kunjunganPerBulan) {
-        chartMonth.data.datasets[0].data = Object.values(data.kunjunganPerBulan);
-        chartMonth.update();
-      }
-
-   
-      if (data.kunjunganPerMinggu) {
-
-        const wk = Object.values(data.kunjunganPerMinggu);
-        chartWeek.data.datasets[0].data = wk;
-        chartWeek.update();
-      }
-
-      if (data.diagnosaChart) {
-        const tbody = document.getElementById('diagnosaBody');
-        if (tbody) {
-          tbody.innerHTML = '';
-          if (data.diagnosaChart.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Belum ada data bulan ini</td></tr>';
-          } else {
-            data.diagnosaChart.forEach((item, idx) => {
-              const tr = `<tr><td>${idx+1}</td><td>${item.diagnosa}</td><td>${item.persen}%</td></tr>`;
-              tbody.insertAdjacentHTML('beforeend', tr);
+            new Chart(monthCanvas, {
+                type: 'bar',
+                data: {
+                    labels: monthLabels,
+                    datasets: [{
+                        data: monthData,
+                        backgroundColor: '#0d6efd',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { legend: { display: false } }
+                }
             });
-          }
+        } catch (error) {
+            console.error('Error rendering monthly chart:', error);
         }
-      }
-
-      if (data.dataPrbTerbaru) {
-        const tbody = document.getElementById('prbBody');
-        if (tbody) {
-          tbody.innerHTML = '';
-          const isAdmin = @json(auth('admin')->check());
-          const colspan = isAdmin ? 6 : 5;
-          if (data.dataPrbTerbaru.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center text-muted py-3">Belum ada data PRB</td></tr>`;
-          } else {
-            data.dataPrbTerbaru.forEach(row => {
-              const badgeClass = row.status_prb === 'Aktif' ? 'bg-success' : 'bg-secondary';
-              const tgl = new Date(row.tgl_pelayanan).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-              let tr = `<tr><td>${row.id_diagnosa}</td><td>${row.no_kartu_bpjs}</td><td>${row.diagnosa}</td><td><span class="badge ${badgeClass}">${row.status_prb}</span></td><td>${tgl}</td>`;
-              if (isAdmin) {
-                tr += `<td>${row.rumah_sakit || ''}</td>`;
-              }
-              tr += '</tr>';
-              tbody.insertAdjacentHTML('beforeend', tr);
-            });
-          }
-        }
-      }
-
-    } catch (err) {
-      console.error('Gagal mengambil data dashboard', err);
     }
-  }
 
- 
-  setInterval(fetchDashboardData, 8000);
+    /* ========= MINGGUAN ========= */
+    const weekCanvas = document.getElementById('chartWeek');
+    if (weekCanvas) {
+        try {
+            const weekData = @json(array_values($kunjunganPerMinggu));
 
-  setInterval(function() {
-      location.reload();
-  }, 300000); 
+            new Chart(weekCanvas, {
+                type: 'bar',
+                data: {
+                    labels: ['Sen','Sel','Rab','Kam','Jum','Sab','Min'],
+                    datasets: [{
+                        data: weekData,
+                        backgroundColor: '#198754',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        } catch (error) {
+            console.error('Error rendering weekly chart:', error);
+        }
+    }
 
+});
 </script>
+
+
 @endsection
