@@ -76,6 +76,40 @@ h6 {
     margin-bottom: 15px;
     color: #333;
 }
+.small-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 2px solid transparent;
+}
+
+.small-card:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+}
+
+.small-card.active-filter {
+    background: #0078D7;
+    color: white;
+    border-color: #0056b3;
+}
+
+.small-card.active-filter small {
+    color: rgba(255,255,255,0.9);
+}
+
+.reminder-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Warna untuk badge reminder */
+.badge.bg-info { background-color: #17a2b8 !important; }
+.badge.bg-warning { background-color: #ffc107 !important; color: #212529 !important; }
+.badge.bg-danger { background-color: #dc3545 !important; }
 </style>
 
 <div class="container-fluid py-4">
@@ -141,38 +175,153 @@ h6 {
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($diagnosaTerbanyak as $i => $d)
-                            <tr>
-                                <td>{{ $i + 1 }}</td>
-                                <td>{{ $d->diagnosa }}</td>
-                                <td>{{ number_format(($d->total / max($totalPrbAktif,1)) * 100, 1) }}%</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
+    @forelse ($reminder as $r)
+        <tr>
+            <td>{{ $r->nama_pasien }}</td>
+            <td>{{ $r->diagnosa }}</td>
+            <td>{{ \Carbon\Carbon::parse($r->tgl_pelayanan_lanjutan)->format('d/m/Y') }}</td>
+            <td>
+                @if ($r->days_left == 0)
+                    <span class="badge bg-danger">H-0</span>
+                @else
+                    <span class="badge bg-warning">
+                        H-{{ $r->days_left }}
+                    </span>
+                @endif
+            </td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="4" class="text-center text-muted">
+                Tidak ada reminder (H-5 s/d H-0)
+            </td>
+        </tr>
+    @endforelse
+</tbody>
+
                 </table>
             </div>
         </div>
 
-        {{-- Reminder --}}
-        <div class="col-lg-4">
-            <div class="right-panel shadow-sm">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="fw-bold mb-0">Reminder</h6>
-                    <a href="{{ route('fktp.export.reminder') }}" class="btn btn-sm btn-primary">
-                        <i class="bi bi-download"></i> Download Excel
-                    </a>
+       {{-- Reminder Section --}}
+<div class="col-lg-4">
+    <div class="right-panel shadow-sm">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold mb-0">Reminder</h6>
+            <div class="d-flex align-items-center">
+                {{-- Filter Dropdown --}}
+                <div class="dropdown me-2">
+                    <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" 
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        @if($reminderFilter == 'all')
+                            Semua (H-5 sampai H+1)
+                        @elseif($reminderFilter == 'h0')
+                            Hari Ini (H-0)
+                        @else
+                            H-{{ str_replace('h', '', $reminderFilter) }}
+                        @endif
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item {{ $reminderFilter == 'all' ? 'active' : '' }}" 
+                               href="{{ request()->fullUrlWithQuery(['reminder_filter' => 'all']) }}">
+                            Semua (H-5 sampai H+1)
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item {{ $reminderFilter == 'h5' ? 'active' : '' }}" 
+                               href="{{ request()->fullUrlWithQuery(['reminder_filter' => 'h5']) }}">
+                            H-5 (5 hari lagi)
+                        </a></li>
+                        <li><a class="dropdown-item {{ $reminderFilter == 'h4' ? 'active' : '' }}" 
+                               href="{{ request()->fullUrlWithQuery(['reminder_filter' => 'h4']) }}">
+                            H-4 (4 hari lagi)
+                        </a></li>
+                        <li><a class="dropdown-item {{ $reminderFilter == 'h3' ? 'active' : '' }}" 
+                               href="{{ request()->fullUrlWithQuery(['reminder_filter' => 'h3']) }}">
+                            H-3 (3 hari lagi)
+                        </a></li>
+                        <li><a class="dropdown-item {{ $reminderFilter == 'h2' ? 'active' : '' }}" 
+                               href="{{ request()->fullUrlWithQuery(['reminder_filter' => 'h2']) }}">
+                            H-2 (2 hari lagi)
+                        </a></li>
+                        <li><a class="dropdown-item {{ $reminderFilter == 'h1' ? 'active' : '' }}" 
+                               href="{{ request()->fullUrlWithQuery(['reminder_filter' => 'h1']) }}">
+                            H-1 (1 hari lagi)
+                        </a></li>
+                        <li><a class="dropdown-item {{ $reminderFilter == 'h0' ? 'active' : '' }}" 
+                               href="{{ request()->fullUrlWithQuery(['reminder_filter' => 'h0']) }}">
+                            Hari Ini (H-0)
+                        </a></li>
+                    </ul>
                 </div>
-
-                @forelse($reminder as $r)
-                    <div class="patient-card" style="cursor: pointer;" onclick="showReminderDetail('{{ $r->nama_pasien }}', '{{ $r->no_kartu_bpjs }}', '{{ $r->no_telp }}', '{{ $r->diagnosa }}', '{{ $r->tgl_pelayanan }}', '{{ $r->tgl_pelayanan_lanjutan }}', '{{ $r->type }}')">
-                        <strong>{{ $r->nama_pasien }}</strong><br>
-                        <span class="badge bg-primary">{{ $r->type }}</span> {{ $r->diagnosa }}<br>
-                        <small>Tgl Lanjutan: {{ \Carbon\Carbon::parse($r->tgl_pelayanan_lanjutan)->format('d/m/Y') }}</small>
-                    </div>
-                @empty
-                    <p class="text-muted">Tidak ada data reminder.</p>
-                @endforelse
+                
+                {{-- Export Button dengan filter yang aktif --}}
+                <a href="{{ route('fktp.export.reminder', ['filter' => $reminderFilter]) }}" 
+                   class="btn btn-sm btn-primary">
+                    <i class="bi bi-download"></i> Excel
+                </a>
             </div>
+        </div>
+
+        {{-- Counter untuk setiap kategori --}}
+        <div class="row g-2 mb-3 text-center">
+            @php
+                $counts = [
+                    'h5' => 0, 'h4' => 0, 'h3' => 0, 
+                    'h2' => 0, 'h1' => 0, 'h0' => 0
+                ];
+                
+                foreach($reminder as $r) {
+                    if($r->days_left == 5) $counts['h5']++;
+                    elseif($r->days_left == 4) $counts['h4']++;
+                    elseif($r->days_left == 3) $counts['h3']++;
+                    elseif($r->days_left == 2) $counts['h2']++;
+                    elseif($r->days_left == 1) $counts['h1']++;
+                    elseif($r->days_left === 0) $counts['h0']++;
+
+                }
+            @endphp
+            
+            @foreach(['h5', 'h4', 'h3', 'h2', 'h1', 'h0'] as $filterKey)
+                <div class="col">
+                    <div class="small-card {{ $reminderFilter == $filterKey ? 'active-filter' : '' }}" 
+                         onclick="location.href='{{ request()->fullUrlWithQuery(['reminder_filter' => $filterKey]) }}'">
+                        <div class="fw-bold">{{ $counts[$filterKey] }}</div>
+                        <small>
+                            @if($filterKey == 'h0')
+                                H-0
+                            @else
+                                H-{{ str_replace('h', '', $filterKey) }}
+                            @endif
+                        </small>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        {{-- List Reminder --}}
+        <div class="reminder-list">
+            @forelse($reminder as $r)
+                @php
+                    $bgClass = 'bg-info';
+                    if($r->days_left <= 0) $bgClass = 'bg-warning';
+                    if($r->days_left <= -1) $bgClass = 'bg-danger';
+                @endphp
+                
+                <div class="patient-card" >
+                        <div>
+                            <strong>{{ $r->nama_pasien }}</strong><br>
+                            <small class="text-muted">{{ $r->diagnosa }}</small><br>
+                            <small>Tgl Lanjutan: {{ \Carbon\Carbon::parse($r->tgl_pelayanan_lanjutan)->format('d/m/Y') }}</small>
+                        </div>
+                        <span class="badge {{ $bgClass }}">{{ $r->type }}</span>
+                    </div>
+                </div>
+            @empty
+                <div class="text-center py-4">
+                    <i class="bi bi-bell-slash display-6 text-muted"></i>
+                    <p class="text-muted mt-2">Tidak ada reminder untuk filter ini</p>
+                </div>
+            @endforelse
         </div>
     </div>
 </div>
@@ -222,21 +371,5 @@ function showReminderDetail(nama, bpjs, telp, diagnosa, tglAwal, tglLanjutan, ty
 </script>
 
 
-<div class="modal fade" id="reminderDetailModal" tabindex="-1" aria-labelledby="reminderDetailModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="reminderDetailModalLabel">Detail Reminder</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="reminderDetailBody">
-              
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 @endsection

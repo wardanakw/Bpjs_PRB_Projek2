@@ -12,20 +12,20 @@ use Illuminate\Support\Facades\DB;
 
 class PasienController extends Controller
 {
-   public function index(Request $request)
+  public function index(Request $request)
 {
-   $query = Patient::with([
-    'diagnosaPrb' => function ($q) {
-        $q->orderByDesc('tgl_pelayanan')
-          ->limit(1); 
-    }
-])->whereHas('diagnosaPrb');
+    // Query untuk mendapatkan semua pasien (termasuk yang belum ada diagnosa)
+    $query = Patient::with([
+        'diagnosaPrb' => function ($q) {
+            $q->orderByDesc('tgl_pelayanan')
+              ->latest(); // Ambil yang terbaru
+        },
+        'creator'
+    ]);
 
-
+    // Filter berdasarkan role user
     if (auth()->user()->role === 'rumah_sakit') {
         if (auth()->user()->rumah_sakit_id) {
-            $rumahSakitUser = auth()->user()->rumahSakit;
-           
             $userIds = \DB::table('users')
                 ->where('rumah_sakit_id', auth()->user()->rumah_sakit_id)
                 ->pluck('id_user');
@@ -35,12 +35,8 @@ class PasienController extends Controller
     }
 
     if (auth()->user()->role === 'apotek') {
-
-        $kodeApotek = auth()->user()->kode_apotek; 
-
+        $kodeApotek = auth()->user()->kode_apotek;
         if ($kodeApotek) {
-
-
             $kodeFktpList = \DB::table('relasi_fktp_apotek')
                 ->where('kode_apotek', $kodeApotek)
                 ->pluck('kode_fktp');
@@ -55,7 +51,7 @@ class PasienController extends Controller
         }
     }
 
-
+    // Filter input role (untuk rumah sakit)
     if (auth()->user()->role === 'rumah_sakit' && $request->filled('input_role')) {
         $inputRole = $request->input_role;
         $query->whereHas('creator', function ($q) use ($inputRole) {
@@ -63,12 +59,22 @@ class PasienController extends Controller
         });
     }
 
+    // Filter tanggal
     if ($request->filled('start_date') && $request->filled('end_date')) {
-        $query->whereHas('diagnosaPrb', function ($q) use ($request) {
-            $q->whereBetween('tgl_pelayanan', [$request->start_date, $request->end_date]);
+        $query->where(function ($q) use ($request) {
+            // Untuk pasien yang punya diagnosa
+            $q->whereHas('diagnosaPrb', function ($diagnosaQuery) use ($request) {
+                $diagnosaQuery->whereBetween('tgl_pelayanan', [$request->start_date, $request->end_date]);
+            })
+            // ATAU untuk pasien tanpa diagnosa, filter berdasarkan created_at pasien
+            ->orWhere(function ($orQuery) use ($request) {
+                $orQuery->doesntHave('diagnosaPrb')
+                       ->whereBetween('created_at', [$request->start_date, $request->end_date]);
+            });
         });
     }
 
+    // Search
     if ($request->filled('search')) {
         $search = $request->search;
         $query->where(function ($q) use ($search) {
@@ -81,46 +87,21 @@ class PasienController extends Controller
         });
     }
 
-    if ($request->filled('filter_no_sep')) {
-        $query->where('no_sep', 'like', "%{$request->filter_no_sep}%");
-    }
-
-    if ($request->filled('filter_no_kartu_bpjs')) {
-        $query->where('no_kartu_bpjs', 'like', "%{$request->filter_no_kartu_bpjs}%");
-    }
-
-    if ($request->filled('filter_diagnosa')) {
-        $query->whereHas('diagnosaPrb', function ($q) use ($request) {
-            $q->where('diagnosa', 'like', "%{$request->filter_diagnosa}%");
-        });
-    }
-
-    if ($request->filled('filter_status_prb')) {
-        $query->whereHas('diagnosaPrb', function ($q) use ($request) {
-            $q->where('status_prb', $request->filter_status_prb);
-        });
-    }
-
-    if ($request->filled('filter_tgl_pelayanan')) {
-        $query->whereHas('diagnosaPrb', function ($q) use ($request) {
-            $q->whereDate('tgl_pelayanan', $request->filter_tgl_pelayanan);
-        });
-    }
-
-    if ($request->filled('filter_input_by')) {
-        $query->whereHas('creator', function ($q) use ($request) {
-            $q->where('role', $request->filter_input_by);
-        });
-    }
-
-
+    // Sorting
     $sortBy = $request->get('sort', 'created_at');
     $direction = $request->get('direction', 'desc');
-    if (in_array($sortBy, ['no_sep', 'no_kartu_bpjs', 'nama_pasien', 'created_at'])) {
-        $query->orderBy($sortBy, $direction);
+    
+    if ($sortBy === 'no_sep') {
+        $query->orderBy('no_sep', $direction);
+    } elseif ($sortBy === 'no_kartu_bpjs') {
+        $query->orderBy('no_kartu_bpjs', $direction);
+    } else {
+        $query->orderBy('created_at', $direction);
     }
 
-    $pasiens = $query->paginate(20);
+    // Pagination - tambahkan distinct untuk menghindari duplikat
+    $pasiens = $query->distinct()->paginate(20);
+
     return view('pasien.index', compact('pasiens'));
 }
 

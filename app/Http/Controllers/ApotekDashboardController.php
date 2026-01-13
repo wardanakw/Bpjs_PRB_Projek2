@@ -106,29 +106,7 @@ class ApotekDashboardController extends Controller
 
     public function notifications()
     {
-        $kodeApotek = auth()->user()->kode_apotek;
-
-        $reminders = DiagnosaPrb::join('patients', 'diagnosa_prb.id_pasien', '=', 'patients.id_pasien')
-            ->leftJoin('obat_prb', 'diagnosa_prb.id_diagnosa', '=', 'obat_prb.id_diagnosa')
-            ->where('patients.kode_apotek', $kodeApotek)
-            ->whereBetween('diagnosa_prb.tgl_pelayanan', [Carbon::now()->subMonths(1)->subDays(5), Carbon::now()->addMonths(1)])
-            ->select('diagnosa_prb.*', 'patients.nama_pasien', 'patients.no_kartu_bpjs', 'patients.no_telp', 'obat_prb.nama_obat')
-            ->get()
-            ->map(function($item) {
-                $serviceDate = Carbon::parse($item->tgl_pelayanan);
-                $pickupDate = $serviceDate->copy()->addMonths(1);
-                $daysDiff = (int) Carbon::now()->diffInDays($pickupDate, false);
-                if ($daysDiff >= 0 && $daysDiff <= 5) {
-                    $item->type = 'H-' . $daysDiff;
-                    $item->pickup_date = $pickupDate->format('Y-m-d');
-                    return $item;
-                }
-                return null;
-            })
-            ->filter()
-            ->values();
-
-        return response()->json(['data' => $reminders]);
+        return response()->json(['data' => []]);
     }
 
     public function exportReminder(Request $request)

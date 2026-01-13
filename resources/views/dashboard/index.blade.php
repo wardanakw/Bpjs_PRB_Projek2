@@ -22,7 +22,7 @@
           <thead>
             <tr><th>No</th><th>Diagnosa</th><th>%</th></tr>
           </thead>
-          <tbody id="diagnosaBody">
+          <tbody>
             @forelse ($diagnosaChart as $index => $item)
             <tr>
               <td>{{ $index + 1 }}</td>
@@ -43,9 +43,9 @@
     <div class="col-lg-4">
       <div class="card p-4">
         <h6 class="fw-semibold mb-3">Kunjungan Setiap Minggu</h6>
-        <div class="chart-container" style="height: 250px;">
-          <canvas id="chartWeek"></canvas>
-        </div>
+        <div class="chart-container week-chart">
+    <canvas id="chartWeek"></canvas>
+</div>
       </div>
     </div>
   </div>
@@ -59,12 +59,9 @@
         <th>Diagnosa</th>
         <th>Status PRB</th>
         <th>Tgl Pelayanan</th>
-        @auth('admin')
-        <th>Rumah Sakit</th>
-        @endauth
       </tr>
     </thead>
-    <tbody id="prbBody">
+    <tbody>
   @forelse($dataPrbTerbaru as $data)
   <tr>
     <td>{{ $data->id_diagnosa }}</td>
@@ -76,12 +73,9 @@
       </span>
     </td>
     <td>{{ \Carbon\Carbon::parse($data->tgl_pelayanan)->format('d M Y') }}</td>
-    @auth('admin')
-    <td>{{ $data->rumah_sakit }}</td>
-    @endauth
   </tr>
   @empty
-  <tr><td colspan="{{ auth('admin') ? 6 : 5 }}" class="text-center text-muted py-3">Belum ada data PRB</td></tr>
+  <tr><td colspan="6" class="text-center text-muted py-3">Belum ada data PRB</td></tr>
   @endforelse
 </tbody>
 
@@ -90,71 +84,127 @@
 
 
 </div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
 
-    /* ========= BULANAN ========= */
-    const monthCanvas = document.getElementById('chartMonth');
-    if (monthCanvas) {
-        try {
-            const monthData = @json(array_values($kunjunganPerBulan));
-            const monthLabels = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const ctx1 = document.getElementById('chartMonth').getContext('2d');
+  const monthData = @json(array_values($kunjunganPerBulan));
+  const monthLabels = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 
-            new Chart(monthCanvas, {
-                type: 'bar',
-                data: {
-                    labels: monthLabels,
-                    datasets: [{
-                        data: monthData,
-                        backgroundColor: '#0d6efd',
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true } },
-                    plugins: { legend: { display: false } }
-                }
-            });
-        } catch (error) {
-            console.error('Error rendering monthly chart:', error);
-        }
+  new Chart(ctx1, {
+      type: 'bar',
+      data: {
+          labels: monthLabels,
+          datasets: [{
+              label: 'Kunjungan',
+              data: monthData,
+              backgroundColor: 'rgba(0, 123, 255, 0.8)',
+              borderColor: '#007bff',
+              borderWidth: 1,
+              borderRadius: 8,
+              hoverBackgroundColor: 'rgba(0, 123, 255, 1)'
+          }]
+      },
+      options: {
+          maintainAspectRatio: false,
+          responsive: true,
+          interaction: { mode: 'nearest', intersect: false },
+          plugins: {
+              tooltip: {
+                  enabled: true,
+                  backgroundColor: '#333',
+                  titleColor: '#fff',
+                  bodyColor: '#fff',
+                  padding: 10,
+                  displayColors: false,
+                  callbacks: {
+                      label: (ctx) => ` ${ctx.parsed.y} Kunjungan`
+                  }
+              },
+              legend: { display: false }
+          },
+          scales: {
+              x: {
+                  grid: { display: false }
+              },
+              y: {
+                  beginAtZero: true,
+                  ticks: { stepSize: 20 }
+              }
+          }
+      }
+  });
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const canvasWeek = document.getElementById('chartWeek');
+    if (!canvasWeek) {
+        console.error('Canvas chartWeek tidak ditemukan');
+        return;
     }
 
-    /* ========= MINGGUAN ========= */
-    const weekCanvas = document.getElementById('chartWeek');
-    if (weekCanvas) {
-        try {
-            const weekData = @json(array_values($kunjunganPerMinggu));
+    const ctx2 = canvasWeek.getContext('2d');
 
-            new Chart(weekCanvas, {
-                type: 'bar',
-                data: {
-                    labels: ['Sen','Sel','Rab','Kam','Jum','Sab','Min'],
-                    datasets: [{
-                        data: weekData,
-                        backgroundColor: '#198754',
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true } },
-                    plugins: { legend: { display: false } }
-                }
-            });
-        } catch (error) {
-            console.error('Error rendering weekly chart:', error);
-        }
+    const weekData = Array.from(@json($chartMinggu));
+    const weekLabels = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+
+    console.log('Data Mingguan:', weekData);
+    console.log('Jumlah data:', weekData.length);
+
+    // ✅ CEK DATA KOSONG SETELAH weekData ADA
+    if (weekData.every(v => v === 0)) {
+        canvasWeek.parentElement.innerHTML = `
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-bar-chart"></i>
+                <p>Belum ada kunjungan minggu ini</p>
+            </div>
+        `;
+        return;
     }
 
+    if (weekData.length === 7) {
+        new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: weekLabels,
+                datasets: [{
+                    label: 'Kunjungan',
+                    data: weekData,
+                    backgroundColor: 'rgba(25, 135, 84, 0.8)',
+                    borderColor: '#198754',
+                    borderWidth: 1,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: 5,   // ⬅️ penting kalau data kecil
+                        ticks: { stepSize: 1 }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        console.log('Chart mingguan berhasil dirender');
+
+    } else {
+        console.error('Data mingguan tidak valid:', weekData);
+        canvasWeek.parentElement.innerHTML = `
+            <div class="alert alert-warning text-center">
+                Data grafik mingguan tidak tersedia
+            </div>
+        `;
+    }
 });
 </script>
-
 
 @endsection

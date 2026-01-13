@@ -329,100 +329,99 @@ th.sortable.desc::after {
                             </tr>
                         </thead>
                         <tbody id="pasienTableBody">
-                            @php
-                                $seenKartu = []; // Initialize an array to track displayed card numbers
-                            @endphp
-                            @forelse ($pasiens as $pasien)
-                                @if(!in_array($pasien->no_kartu_bpjs, $seenKartu))
-                                    @php
-                                        $seenKartu[] = $pasien->no_kartu_bpjs; // Add the card number to the seen list
-                                    @endphp
-                                    @if($pasien->diagnosaPrb->isNotEmpty())
-                                        @foreach($pasien->diagnosaPrb as $diagnosa)
-                                            <tr>
-                                                <td>{{ $diagnosa->no_sep ?? $pasien->no_sep }}</td>
-                                                <td>{{ $pasien->no_kartu_bpjs }}</td>
-                                                <td>{{ $diagnosa->diagnosa ?? '-' }}</td>
-                                                <td>
-                                                    <span class="badge {{ $diagnosa->status_prb == 'Aktif' ? 'badge-aktif' : 'badge-nonaktif' }}">
-                                                        {{ $diagnosa->status_prb ?? 'Tidak Aktif' }}
-                                                    </span>
-                                                </td>
-                                                <td>{{ $diagnosa->tgl_pelayanan ? \Carbon\Carbon::parse($diagnosa->tgl_pelayanan)->format('d/m/Y') : '-' }}</td>
-                                                @if(auth()->user()->role === 'rumah_sakit')
-                                                <td>
-                                                    <span class="badge {{ $pasien->creator->role === 'rumah_sakit' ? 'bg-danger' : ($pasien->creator->role === 'fktp' ? 'bg-primary' : 'bg-success') }}">
-                                                        {{ ucfirst($pasien->creator->role ?? 'Unknown') }}
-                                                    </span>
-                                                </td>
-                                                @endif
-                                                @if(auth()->user()->role === 'admin')
-                                                <td class="text-center">
-                                                    @if($diagnosa->obatPrb->first() && $diagnosa->obatPrb->first()->bukti_bayar_pdf)
-                                                        <a href="{{ route('laporan.download.pdf', urlencode($diagnosa->obatPrb->first()->bukti_bayar_pdf)) }}" target="_blank" class="btn btn-sm btn-outline-warning">
-                                                            <i class="bi bi-file-pdf"></i>
-                                                        </a>
-                                                    @else
-                                                        <span class="text-muted">-</span>
-                                                    @endif
-                                                </td>
-                                                @endif
-                                                <td class="text-center">
-                                                    <div class="d-flex justify-content-center">
-                                                        <a href="{{ route('pasien.show', $pasien->id_pasien) }}"
-                                                           class="btn btn-sm btn-outline-primary me-1"
-                                                           title="Detail Pasien" aria-label="Detail Pasien">
-                                                            <i class="bi bi-eye"></i>
-                                                        </a>
-
-                                                        <a href="{{ route('pasien.edit', $pasien->id_pasien) }}"
-                                                           class="btn btn-sm btn-primary"
-                                                           title="Edit Pasien" aria-label="Edit Pasien">
-                                                            <i class="bi bi-pencil"></i>
-                                                        </a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    @else
-                                       <tr>
-                                        <tr>
-                                            <td>{{ $pasien->no_sep ?? '-' }}</td>
-                                            <td>{{ $pasien->no_kartu_bpjs }}</td>
-                                            <td><span class="empty-text">Belum ada diagnosa</span></td>
-                                            <td>
-                                                <span class="badge badge-nonaktif">Tidak Aktif</span>
-                                            </td>
-                                            <td>-</td>
-                                            @if(auth()->user()->role === 'rumah_sakit')
-                                            <td>
-                                                <span class="badge {{ $pasien->creator->role === 'rumah_sakit' ? 'bg-danger' : ($pasien->creator->role === 'fktp' ? 'bg-primary' : 'bg-success') }}">
-                                                    {{ ucfirst($pasien->creator->role ?? 'Unknown') }}
-                                                </span>
-                                            </td>
-                                            @endif
-                                            @if(auth()->user()->role === 'admin')
-                                            <td class="text-center"><span class="text-muted">-</span></td>
-                                            @endif
-                                            <td class="text-center">
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <a href="{{ route('pasien.show', $pasien->id_pasien) }}" class="btn btn-sm btn-outline-primary" title="Detail">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                    <a href="{{ route('pasien.edit', $pasien->id_pasien) }}" class="btn btn-sm btn-primary" title="Edit">
-                                                        <i class="bi bi-pencil"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endif
-                                @endif
-                            @empty
-                                <tr>
-                                    <td colspan="{{ (auth()->user()->role === 'admin' || auth()->user()->role === 'rumah_sakit') ? 8 : 7 }}" class="text-center text-muted">Belum ada data pasien</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
+    @forelse ($pasiens as $pasien)
+        @php
+            // Ambil diagnosa terbaru jika ada
+            $latestDiagnosa = $pasien->diagnosaPrb->sortByDesc('tgl_pelayanan')->first();
+        @endphp
+        
+        <tr>
+            <!-- No SRB -->
+            <td>
+                {{ $latestDiagnosa->no_sep ?? $pasien->no_sep ?? '-' }}
+            </td>
+            
+            <!-- No Kartu BPJS -->
+            <td>{{ $pasien->no_kartu_bpjs }}</td>
+            
+            <!-- Diagnosa -->
+            <td>
+                @if($latestDiagnosa)
+                    {{ $latestDiagnosa->diagnosa ?? '-' }}
+                @else
+                    <span class="empty-text">Belum ada diagnosa</span>
+                @endif
+            </td>
+            
+            <!-- Status PRB -->
+            <td>
+                @if($latestDiagnosa)
+                    <span class="badge {{ $latestDiagnosa->status_prb == 'Aktif' ? 'badge-aktif' : 'badge-nonaktif' }}">
+                        {{ $latestDiagnosa->status_prb ?? 'Tidak Aktif' }}
+                    </span>
+                @else
+                    <span class="badge badge-nonaktif">Tidak Aktif</span>
+                @endif
+            </td>
+            
+            <!-- Tgl Pelayanan -->
+            <td>
+                @if($latestDiagnosa && $latestDiagnosa->tgl_pelayanan)
+                    {{ \Carbon\Carbon::parse($latestDiagnosa->tgl_pelayanan)->format('d/m/Y') }}
+                @else
+                    -
+                @endif
+            </td>
+            
+            <!-- Input By (untuk rumah sakit) -->
+            @if(auth()->user()->role === 'rumah_sakit')
+            <td>
+                <span class="badge {{ $pasien->creator->role === 'rumah_sakit' ? 'bg-danger' : ($pasien->creator->role === 'fktp' ? 'bg-primary' : 'bg-success') }}">
+                    {{ ucfirst($pasien->creator->role ?? 'Unknown') }}
+                </span>
+            </td>
+            @endif
+            
+            <!-- Bukti Bayar Apotek (untuk admin) -->
+            @if(auth()->user()->role === 'admin')
+            <td class="text-center">
+                @if($latestDiagnosa && $latestDiagnosa->obatPrb->isNotEmpty() && $latestDiagnosa->obatPrb->first()->bukti_bayar_pdf)
+                    <a href="{{ route('laporan.download.pdf', urlencode($latestDiagnosa->obatPrb->first()->bukti_bayar_pdf)) }}" 
+                       target="_blank" 
+                       class="btn btn-sm btn-outline-warning">
+                        <i class="bi bi-file-pdf"></i>
+                    </a>
+                @else
+                    <span class="text-muted">-</span>
+                @endif
+            </td>
+            @endif
+            
+            <!-- Aksi -->
+            <td class="text-center">
+                <div class="d-flex justify-content-center gap-1">
+                    <a href="{{ route('pasien.show', $pasien->id_pasien) }}" 
+                       class="btn btn-sm btn-outline-primary" 
+                       title="Detail">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{{ route('pasien.edit', $pasien->id_pasien) }}" 
+                       class="btn btn-sm btn-primary" 
+                       title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                </div>
+            </td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="{{ (auth()->user()->role === 'admin' || auth()->user()->role === 'rumah_sakit') ? 8 : 7 }}" 
+                class="text-center text-muted">
+                Belum ada data pasien
+            </td>
+        </tr>
+    @endforelse
+</tbody>
                     </table>
                     <nav class="pagination-wrapper" aria-label="Pagination Navigation">
     {{ $pasiens->appends(request()->query())->links('pagination::bootstrap-5') }}

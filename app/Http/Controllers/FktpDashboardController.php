@@ -68,24 +68,50 @@ class FktpDashboardController extends Controller
             ->limit(5)
             ->get();
 
-        $reminder = DiagnosaPrb::join('patients', 'diagnosa_prb.id_pasien', '=', 'patients.id_pasien')
-            ->where('patients.fktp_kode', $fktpKode)
-            ->whereBetween('diagnosa_prb.tgl_pelayanan', [Carbon::now()->subMonths(1), Carbon::now()->addMonths(6)])
-            ->select('diagnosa_prb.*', 'patients.nama_pasien', 'patients.no_kartu_bpjs', 'patients.no_telp')
-            ->get()
-            ->map(function($item) {
-                $serviceDate = Carbon::parse($item->tgl_pelayanan);
-                $followUpDate = $serviceDate->copy()->addMonths(1);
-                $daysDiff = Carbon::now()->diffInDays($followUpDate, false);
-                if ($daysDiff >= 0 && $daysDiff <= 5) {
-                    $item->type = 'H-' . $daysDiff;
-                    $item->tgl_pelayanan_lanjutan = $followUpDate->format('Y-m-d');
-                    $item->days_left = $daysDiff;
-                    return $item;
-                }
-                return null;
-            })
-            ->filter();
+        $reminderFilter = request('reminder_filter', 'all');
+
+        $today = Carbon::today();
+
+$reminder = DiagnosaPrb::join('patients', 'diagnosa_prb.id_pasien', '=', 'patients.id_pasien')
+    ->where('patients.fktp_kode', $fktpKode)
+    ->select(
+        'diagnosa_prb.diagnosa',
+        'diagnosa_prb.tgl_pelayanan',
+        'patients.nama_pasien',
+        'patients.no_kartu_bpjs',
+        'patients.no_telp'
+    )
+    ->get()
+    ->map(function ($item) use ($today) {
+
+        $tglKunjungan = Carbon::parse($item->tgl_pelayanan)->addMonth();
+        $h = $today->diffInDays($tglKunjungan, false);
+
+        // TAMPILKAN H-5 s/d H-0
+        if ($h >= 0 && $h <= 5) {
+            return (object) [
+                'nama_pasien' => $item->nama_pasien,
+                'diagnosa'    => $item->diagnosa,
+                'tgl_pelayanan_lanjutan' => $tglKunjungan->format('Y-m-d'),
+                'days_left'   => $h,
+                'type'        => $h === 0 ? 'H-0' : 'H-' . $h
+            ];
+        }
+
+        return null;
+    })
+    ->filter()
+    ->sortBy('days_left');
+
+
+       if ($reminderFilter !== 'all') {
+    $filterDays = (int) str_replace('h', '', $reminderFilter);
+
+    $reminder = $reminder->filter(function ($item) use ($filterDays) {
+        return isset($item->days_left) && $item->days_left === $filterDays;
+    });
+}
+
 
         return view('dashboard.fktp', compact(
             'totalPrbAktif',
@@ -95,16 +121,22 @@ class FktpDashboardController extends Controller
             'resepBulanIni',
             'chartData',
             'diagnosaTerbanyak',
-            'reminder'
+            'reminder',
+            'reminderFilter'
         ));
     }
 
     public function exportReminder()
     {
         $kodeFktp = auth()->user()->fktp_kode;
+        $reminderFilter = request('filter', 'all');
+
         $reminder = DiagnosaPrb::join('patients', 'diagnosa_prb.id_pasien', '=', 'patients.id_pasien')
             ->where('patients.fktp_kode', $kodeFktp)
-            ->whereBetween('diagnosa_prb.tgl_pelayanan', [Carbon::now()->subMonths(1), Carbon::now()->addMonths(6)])
+            ->whereBetween('diagnosa_prb.tgl_pelayanan', [
+                Carbon::now()->subMonths(1),
+                Carbon::now()->subMonths(1)->addDays(5)
+            ])
             ->select('diagnosa_prb.*', 'patients.nama_pasien', 'patients.no_kartu_bpjs', 'patients.no_telp')
             ->get()
             ->map(function($item) {
@@ -124,6 +156,17 @@ class FktpDashboardController extends Controller
                 return null;
             })
             ->filter();
+
+        // Filter reminder berdasarkan reminderFilter
+        if ($reminderFilter !== 'all') {
+            $filterDays = (int) str_replace('h', '', $reminderFilter);
+            $reminder = $reminder->filter(function($item) use ($filterDays) {
+                $serviceDate = Carbon::parse($item['Tgl Pelayanan Awal']);
+                $followUpDate = $serviceDate->copy()->addMonths(1);
+                $daysDiff = Carbon::now()->diffInDays($followUpDate, false);
+                return $daysDiff == $filterDays;
+            });
+        }
 
         $filename = 'reminder_pelayanan_lanjutan_' . date('Y-m-d') . '.xlsx';
         $headers = [

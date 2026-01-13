@@ -4,124 +4,114 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\DiagnosaPrb;
+use App\Models\Patient;
 use Carbon\Carbon;
 use DB;
 
 class DashboardController extends Controller
 {
-    public function index()
-    {
-        return view('dashboard.index', $this->getDashboardData());
-    }
-
-    public function data()
-    {
-        return response()->json($this->getDashboardData());
-    }
-
-    protected function getDashboardData()
-    {
-        $user = auth()->user();
-        $isAdmin = $user && $user->role === 'admin';
-
-        $kunjunganPerBulan = array_fill(1, 12, 0);
-
-        $qBulanan = DiagnosaPrb::leftJoin('patients', 'diagnosa_prb.id_pasien', '=', 'patients.id_pasien')
-            ->selectRaw('MONTH(diagnosa_prb.tgl_pelayanan) as bulan, COUNT(*) as total')
-            ->whereYear('diagnosa_prb.tgl_pelayanan', Carbon::now()->year);
-
-        $this->applyRoleFilter($qBulanan, $user, $isAdmin);
-
-        $qBulanan->groupByRaw('MONTH(diagnosa_prb.tgl_pelayanan)')
-            ->pluck('total', 'bulan')
-            ->each(fn ($v, $k) => $kunjunganPerBulan[(int)$k] = (int)$v);
-
-       $kunjunganPerBulanArray = array_values($kunjunganPerBulan);
-
+ public function index()
+{
     
-        $bulanIni  = Carbon::now()->month;
-        $tahunIni  = Carbon::now()->year;
+    $kunjunganBulanan = DiagnosaPrb::select(
+        DB::raw("MONTH(tgl_pelayanan) as bulan"),
+        DB::raw("COUNT(*) as total")
+    )
+    ->whereYear('tgl_pelayanan', Carbon::now()->year)
+    ->groupBy('bulan')
+    ->orderBy('bulan')
+    ->pluck('total', 'bulan');
 
-        $qDiagnosa = DiagnosaPrb::leftJoin('patients', 'diagnosa_prb.id_pasien', '=', 'patients.id_pasien')
-            ->select('diagnosa_prb.diagnosa', DB::raw('COUNT(*) as total'))
-            ->whereMonth('diagnosa_prb.tgl_pelayanan', $bulanIni)
-            ->whereYear('diagnosa_prb.tgl_pelayanan', $tahunIni);
+    $kunjunganPerBulan = array_fill(1, 12, 0);
+    foreach ($kunjunganBulanan as $bulan => $total) {
+        $kunjunganPerBulan[$bulan] = $total;
+    }
 
-        $this->applyRoleFilter($qDiagnosa, $user, $isAdmin);
+    $bulanIni = Carbon::now()->month;
+    $tahunIni = Carbon::now()->year;
 
-        $diagnosaTerbanyak = $qDiagnosa
-            ->groupBy('diagnosa_prb.diagnosa')
+   $diagnosaTerbanyak = DiagnosaPrb::select('diagnosa', DB::raw('COUNT(*) as total'))
+            ->whereMonth('tgl_pelayanan', $bulanIni)
+            ->whereYear('tgl_pelayanan', $tahunIni)
+            ->groupBy('diagnosa')
             ->orderByDesc('total')
             ->limit(5)
             ->get();
+            
+    $totalDiagnosaBulanIni = DiagnosaPrb::whereMonth('tgl_pelayanan', $bulanIni)
+        ->whereYear('tgl_pelayanan', $tahunIni)
+        ->count();
 
-        $totalDiagnosa = $diagnosaTerbanyak->sum('total');
-
-        $diagnosaChart = $diagnosaTerbanyak->map(fn ($d) => [
-            'diagnosa' => $d->diagnosa,
-            'persen'   => $totalDiagnosa > 0
-                ? round(($d->total / $totalDiagnosa) * 100, 1)
-                : 0
-        ])->toArray();
-
-       
-        $kunjunganPerMinggu = array_fill(1, 7, 0);
-
-        $qMingguan = DiagnosaPrb::leftJoin('patients', 'diagnosa_prb.id_pasien', '=', 'patients.id_pasien')
-            ->selectRaw('DAYOFWEEK(diagnosa_prb.tgl_pelayanan) as hari, COUNT(*) as total')
-            ->whereBetween('diagnosa_prb.tgl_pelayanan', [
-                Carbon::now()->startOfWeek(),
-                Carbon::now()->endOfWeek()
-            ]);
-
-        $this->applyRoleFilter($qMingguan, $user, $isAdmin);
-
-        $totals = $qMingguan->groupByRaw('DAYOFWEEK(diagnosa_prb.tgl_pelayanan)')
-            ->pluck('total', 'hari')
-            ->toArray();
-
-        $order = [2,3,4,5,6,7,1];
-        $kunjunganPerMingguArray = array_map(fn($d) => isset($totals[$d]) ? (int)$totals[$d] : 0, $order);
-
-       
-        $qPrb = DiagnosaPrb::leftJoin('patients', 'diagnosa_prb.id_pasien', '=', 'patients.id_pasien')
-            ->leftJoin('users', 'patients.created_by', '=', 'users.id_user');
-
-        $this->applyRoleFilter($qPrb, $user, $isAdmin);
-
-        $dataPrbTerbaru = $qPrb->select(
-                'diagnosa_prb.id_diagnosa',
-                'patients.no_kartu_bpjs',
-                'diagnosa_prb.diagnosa',
-                'diagnosa_prb.status_prb',
-                'diagnosa_prb.tgl_pelayanan',
-                'users.username as rumah_sakit'
-            )
-            ->orderByDesc('diagnosa_prb.tgl_pelayanan')
-            ->limit($isAdmin ? 10 : 5)
-            ->get();
-
+    $diagnosaChart = $diagnosaTerbanyak->map(function($item) use ($totalDiagnosaBulanIni) {
         return [
-            'kunjunganPerBulan'  => $kunjunganPerBulanArray,
-            'diagnosaChart'     => $diagnosaChart,
-            'kunjunganPerMinggu'=> $kunjunganPerMingguArray,
-            'dataPrbTerbaru'    => $dataPrbTerbaru,
+            'diagnosa' => $item->diagnosa,
+            'persen' => $totalDiagnosaBulanIni > 0
+                ? round(($item->total / $totalDiagnosaBulanIni) * 100, 1)
+                : 0
         ];
-    }
+    });
 
-   
-    private function applyRoleFilter($query, $user, $isAdmin)
-    {
-        if ($isAdmin) return;
 
-        if ($user->role === 'fktp') {
-            $query->where('patients.fktp_kode', $user->fktp_kode);
-        } elseif ($user->role === 'apotek') {
-            $query->where('patients.kode_apotek', $user->kode_apotek);
-        } elseif ($user->role === 'rumah_sakit') {
-            $query->where('patients.rumah_sakit_id', $user->rumah_sakit_id);
-        } else {
-            $query->where('patients.created_by', $user->id_user);
-        }
+    $kunjunganMingguan = DiagnosaPrb::select(
+        DB::raw("DAYOFWEEK(tgl_pelayanan) as hari"),
+        DB::raw("COUNT(*) as total")
+    )
+    ->whereBetween('tgl_pelayanan', [
+        Carbon::now()->startOfWeek(),
+        Carbon::now()->endOfWeek()
+    ])
+    ->groupBy('hari')
+    ->pluck('total', 'hari');
+
+     $kunjunganMingguan = DiagnosaPrb::select(
+        DB::raw("DAYOFWEEK(tgl_pelayanan) as hari"),
+        DB::raw("COUNT(*) as total")
+    )
+    ->whereBetween('tgl_pelayanan', [
+        Carbon::now()->startOfWeek(), // Senin
+        Carbon::now()->endOfWeek()    // Minggu
+    ])
+    ->groupBy('hari')
+    ->pluck('total', 'hari');
+
+    // Inisialisasi array untuk 7 hari (1=Minggu, 2=Senin, ..., 7=Sabtu)
+    $kunjunganPerMinggu = array_fill(1, 7, 0);
+    foreach ($kunjunganMingguan as $hari => $total) {
+        $kunjunganPerMinggu[$hari] = $total;
     }
+    
+    // Konversi ke format yang sesuai untuk chart
+    // Urutan: Senin, Selasa, Rabu, Kamis, Jumat, Sabtu, Minggu
+    $hariChart = [
+        2 => $kunjunganPerMinggu[2] ?? 0, // Senin
+        3 => $kunjunganPerMinggu[3] ?? 0, // Selasa
+        4 => $kunjunganPerMinggu[4] ?? 0, // Rabu
+        5 => $kunjunganPerMinggu[5] ?? 0, // Kamis
+        6 => $kunjunganPerMinggu[6] ?? 0, // Jumat
+        7 => $kunjunganPerMinggu[7] ?? 0, // Sabtu
+        1 => $kunjunganPerMinggu[1] ?? 0  // Minggu
+    ];
+    
+    // Ambil hanya values untuk chart
+    $chartMinggu = array_values($hariChart);
+
+    $dataPrbTerbaru = DiagnosaPrb::join('patients', 'diagnosa_prb.id_pasien', '=', 'patients.id_pasien')
+        ->select(
+            'diagnosa_prb.id_diagnosa',
+            'patients.no_kartu_bpjs',
+            'diagnosa_prb.diagnosa',
+            'diagnosa_prb.status_prb',
+            'diagnosa_prb.tgl_pelayanan'
+        )
+        ->orderBy('diagnosa_prb.tgl_pelayanan', 'desc')
+        ->take(5)
+        ->get();
+
+    return view('dashboard.index', compact(
+        'kunjunganPerBulan',
+        'diagnosaChart',
+        'chartMinggu', // Ubah nama variabel
+        'dataPrbTerbaru'
+    ));
+}
 }

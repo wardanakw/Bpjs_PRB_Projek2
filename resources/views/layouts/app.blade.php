@@ -11,7 +11,7 @@
 
     <style>
         * { font-family: 'Poppins', sans-serif; }
-        body { background-color: #f5f7fa; overflow-x: hidden; }
+        body { background-color: #f5f7fa;  }
 
         .navbar {
             background: #fff;
@@ -59,7 +59,7 @@
             font-size: 18px;
             cursor: pointer;
         }
-
+      
         .sidebar {
             width: 80px;
             background: linear-gradient(180deg, #0078D7, #1888e3ff, #41b7eaff);
@@ -178,6 +178,15 @@
                 display: block !important;
             }
         }
+        .week-chart {
+    position: relative;
+    height: 260px !important;
+}
+
+#chartWeek {
+    height: 260px !important;
+    width: 100% !important;
+}
        
 
     </style>
@@ -354,24 +363,7 @@
 
     </script>
   
-        <div class="modal fade" id="pickupReminderModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Pengingat Pengambilan Obat Pasien</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Berikut adalah pasien yang memiliki jadwal pengambilan obat dalam waktu dekat</p>
-                        <div id="pickupReminderList"></div>
-                    </div>
-                    <div class="modal-footer">
-                        <a href="{{ route('apotek.obat.riwayat-klaim') }}" class="btn btn-primary">Lihat Riwayat Klaim</a>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        
 
         <script>
                 
@@ -469,26 +461,7 @@
                 </script>
         @endif
 
-        @if(Auth::check() && Auth::user()->role === 'fktp')
-    
-                <div class="modal fade" id="fktpReminderModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-lg modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Pengingat Pelayanan Lanjutan Pasien</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <p>Berikut adalah pasien yang memiliki jadwal pelayanan lanjutan </p>
-                                <div id="fktpReminderList"></div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-        @endif
+      
     @if(session('success') || session('error'))
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
         <div id="sessionToast" class="toast align-items-center text-bg-{{ session('success') ? 'success' : 'danger' }} border-0" role="alert" aria-live="assertive" aria-atomic="true">
