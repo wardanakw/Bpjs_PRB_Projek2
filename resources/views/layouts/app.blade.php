@@ -315,6 +315,12 @@
                     <span>Riwayat Obat klaim</span>
                 </a>
             </li>
+            <li>
+                <a href="{{ route('apotek.laporan-obat-keluar') }}">
+                    <i class="bi bi-graph-up"></i>
+                    <span>Laporan Obat Keluar</span>
+                </a>
+            </li>
         @endif
 
     {{-- Menu lain tetap sama --}}

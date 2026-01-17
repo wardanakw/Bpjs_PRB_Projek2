@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminFaskesController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ApotekDashboardController;
+use App\Http\Controllers\ApotekLaporanController;
 use App\Http\Controllers\FktpPatientController;
 use App\Http\Controllers\PasienController;
 use App\Http\Controllers\PrbController;
@@ -98,6 +99,8 @@ Route::middleware(['auth:apotek', 'role:apotek', 'EnsureApotekGuard'])->group(fu
         
         Route::post('/diagnosa/{idDiagnosa}/klaim', [FktpPatientController::class, 'klaimDiagnosa'])->name('diagnosa.klaim');
         Route::get('/obat/riwayat-klaim', [FktpPatientController::class, 'riwayatObatKlaim'])->name('obat.riwayat-klaim');
+        Route::get('/laporan-obat-keluar', [ApotekLaporanController::class, 'laporanObatKeluar'])->name('laporan-obat-keluar');
+        Route::get('/laporan-obat-keluar/export', [ApotekLaporanController::class, 'exportLaporanObatKeluar'])->name('laporan-obat-keluar.export');
         Route::get('/notifications', [ApotekDashboardController::class, 'notifications'])->name('apotek.notifications');
         Route::get('/export-reminder', [ApotekDashboardController::class, 'exportReminder'])->name('export.reminder');
         Route::post('/diagnosa/{idDiagnosa}/upload-pdf', [FktpPatientController::class, 'uploadKlaimPdf'])->name('diagnosa.upload_pdf');
