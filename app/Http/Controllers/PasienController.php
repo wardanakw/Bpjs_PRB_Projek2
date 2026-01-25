@@ -161,7 +161,7 @@ public function create()
                 ->withInput();
         } else {
 
-            $pasien = Patient::create([
+            $patientData = [
                 'no_sep' => $request->no_sep,
                 'no_kartu_bpjs' => $request->no_kartu_bpjs,
                 'nama_pasien' => $request->nama_pasien,
@@ -171,7 +171,14 @@ public function create()
                 'kode_apotek' => $kodeApotek,
                 'no_telp' => $request->no_telp,
                 'created_by' => auth()->id(),
-            ]);
+            ];
+
+            // Auto-fill rumah_sakit_id jika user adalah rumah_sakit
+            if (auth()->user()->role === 'rumah_sakit' && auth()->user()->rumah_sakit_id) {
+                $patientData['rumah_sakit_id'] = auth()->user()->rumah_sakit_id;
+            }
+
+            $pasien = Patient::create($patientData);
         }
 
         if ($request->filled('diagnosa')) {

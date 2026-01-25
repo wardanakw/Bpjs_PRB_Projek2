@@ -258,7 +258,12 @@
        <ul>
     {{-- Dashboard semua role --}}
     <li>
-        <a href="{{ (Auth::user()->role == 'fktp') ? route('fktp.dashboard') : ((Auth::user()->role == 'apotek') ? route('apotek.dashboard') : route('dashboard.index')) }}">
+        <a href="{{ 
+            (Auth::user()->role == 'fktp') ? route('fktp.dashboard') : 
+            ((Auth::user()->role == 'apotek') ? route('apotek.dashboard') : 
+            ((Auth::user()->role == 'rumah_sakit') ? route('rumahsakit.dashboard') : 
+            route('dashboard.index'))) 
+        }}">
             <i class="bi bi-house"></i>
             <span>Dashboard</span>
         </a>

@@ -5,6 +5,7 @@ use Mews\Captcha\CaptchaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminFaskesController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\RumahSakitDashboardController;
 use App\Http\Controllers\ApotekDashboardController;
 use App\Http\Controllers\ApotekLaporanController;
 use App\Http\Controllers\FktpPatientController;
@@ -15,6 +16,11 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\FktpDashboardController;
 
 Route::get('captcha/{config?}', [CaptchaController::class, 'getCaptcha'])->name('captcha');
+// routes/web.php
+// Route debugging
+Route::get('/debug-dashboard', [RumahSakitDashboardController::class, 'debugDatabase'])
+    ->name('rumahsakit.debug')
+    ->middleware('auth');
 
 Route::middleware('guest')->group(function () {
     Route::get('/', fn() => redirect()->route('login'));
@@ -29,6 +35,12 @@ Route::middleware(['multiauth:admin,rumah_sakit', 'role:admin,rumah_sakit'])->gr
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
     Route::get('/dashboard/data', [DashboardController::class, 'data'])->name('dashboard.data');
+
+    // Dashboard khusus Rumah Sakit
+    Route::middleware(['auth:rumah_sakit', 'role:rumah_sakit'])->group(function () {
+        Route::get('/rumah-sakit/dashboard', [RumahSakitDashboardController::class, 'index'])->name('rumahsakit.dashboard');
+        Route::get('/rumah-sakit/dashboard/data', [RumahSakitDashboardController::class, 'data'])->name('rumahsakit.dashboard.data');
+    });
 
     Route::prefix('admin')->name('admin.')->middleware(['auth:admin', 'role:admin'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

@@ -28,6 +28,7 @@ class Patient extends Model
         'file_upload',
         'created_by',
         'kode_apotek',
+        'rumah_sakit_id',
     ];
 
     public function diagnosaPrb()
