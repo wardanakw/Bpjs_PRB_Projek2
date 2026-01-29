@@ -13,9 +13,13 @@ use DB;
 
 class FktpPatientController extends Controller
 {
-   public function index()
+   public function index(Request $request)
 {
     $user = auth()->user();
+    $startDate = $request->input('start_date');
+    $endDate = $request->input('end_date');
+    $search = $request->input('search');
+
     if ($user->role === 'apotek') {
         $kodeApotek = $user->kode_apotek;
         $fktpKodes = RelasiFktpApotek::where('kode_apotek', $kodeApotek)->pluck('kode_fktp')->toArray();
@@ -24,14 +28,38 @@ class FktpPatientController extends Controller
             ->whereHas('diagnosaPrb.obatPrb', function($q) {
                 $q->where('is_klaim', false);
             })
-            ->with(['diagnosaPrb.obatPrb'])
-            ->get();
+            ->with(['diagnosaPrb.obatPrb']);
     } else {
         $kode = $user->fktp_kode;
-        $patients = Patient::where('fktp_kode', $kode)->with(['diagnosaPrb.obatPrb'])->get();
+        $patients = Patient::where('fktp_kode', $kode)->with(['diagnosaPrb.obatPrb']);
     }
 
-    return view('fktp.patients.index', compact('patients'));
+    // Filter berdasarkan search
+    if ($search) {
+        $patients = $patients->where(function($q) use ($search) {
+            $q->where('nama_pasien', 'like', '%' . $search . '%')
+              ->orWhere('no_kartu_bpjs', 'like', '%' . $search . '%');
+        });
+    }
+
+    // Filter berdasarkan periode tanggal
+    if ($startDate && $endDate) {
+        $patients = $patients->whereHas('diagnosaPrb', function($q) use ($startDate, $endDate) {
+            $q->whereBetween('tgl_pelayanan', [$startDate, $endDate]);
+        });
+    } elseif ($startDate) {
+        $patients = $patients->whereHas('diagnosaPrb', function($q) use ($startDate) {
+            $q->where('tgl_pelayanan', '>=', $startDate);
+        });
+    } elseif ($endDate) {
+        $patients = $patients->whereHas('diagnosaPrb', function($q) use ($endDate) {
+            $q->where('tgl_pelayanan', '<=', $endDate);
+        });
+    }
+
+    $patients = $patients->distinct()->paginate(20)->appends(request()->query());
+
+    return view('fktp.patients.index', compact('patients', 'startDate', 'endDate', 'search'));
 }
 
 public function edit($id)

@@ -11,11 +11,40 @@
       background-position: center;
       background-attachment: fixed;
       background-repeat: no-repeat;
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
       font-family: 'Poppins', sans-serif;
+      padding: 20px;
+    }
+
+    .login-container {
+      display: flex;
+      gap: 30px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 900px;
+    }
+
+    .login-image {
+      flex: 1;
+      min-width: 280px;
+      max-width: 320px;
+    }
+
+    .login-image img {
+      width: 100%;
+      height: auto;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 82, 163, 0.4), 0 4px 16px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .login-image img:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(0, 82, 163, 0.5), 0 6px 20px rgba(0,0,0,0.25);
     }
 
     .login-card {
@@ -26,6 +55,7 @@
       padding: 40px;
       width: 400px;
       color: black;
+      flex-shrink: 0;
     }
 
     .login-card h3 {
@@ -65,10 +95,30 @@
     .captcha-container img:hover {
       transform: scale(1.05);
     }
+
+    @media (max-width: 768px) {
+      .login-container {
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .login-card {
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .login-image {
+        max-width: 280px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="login-card">
+  <div class="login-container">
+    <div class="login-image">
+      <img src="{{ asset('backgrounds/prinsip-prb-3b.svg') }}" alt="PRINSIP PRB - 3B">
+    </div>
+    <div class="login-card">
     <h3>RUBICON+</h3>
 
 @if ($errors->any())
@@ -113,6 +163,7 @@
 
       <button type="submit" class="btn btn-login">LOGIN</button>
     </form>
+    </div>
   </div>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

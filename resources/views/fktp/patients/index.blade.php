@@ -122,11 +122,57 @@ body { background-color: #f5f7fa; }
 .badge-nonaktif { background-color: #b0b0b0; color: white; }
 
 .empty-text { font-style: italic; color: #777; }
+
+/* Pagination Styling */
+.pagination-wrapper {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 8px;
+}
+
+.pagination {
+    margin: 0;
+}
+
+.pagination .page-link {
+    color: #0078D7;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px !important;
+    margin: 0 2px;
+    padding: 8px 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.pagination .page-link:hover {
+    color: #005ea6;
+    background-color: #f8f9fa;
+    border-color: #0078D7;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #0078D7;
+    border-color: #0078D7;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0,120,215,0.3);
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #6c757d;
+    background-color: #fff;
+    border-color: #dee2e6;
+}
+
+.pagination .page-item:first-child .page-link,
+.pagination .page-item:last-child .page-link {
+    font-weight: 500;
+}
 </style>
 
 <div class="main-content" id="mainContent">
 <div class="filter-box">
-    <form action="{{ route('pasien.index') }}" method="GET" class="w-100 d-flex justify-content-between align-items-center flex-wrap">
+    <form action="{{ auth()->user()->role === 'apotek' ? route('apotek.patients.index') : route('fktp.patients.index') }}" method="GET" class="w-100 d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div class="left-section">
             <div class="input-group search-group">
                 <span class="input-group-text">
@@ -142,7 +188,12 @@ body { background-color: #f5f7fa; }
             </div>
         </div>
 
-        <button type="submit" class="btn-tampilkan">Tampilkan</button>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn-tampilkan">Tampilkan</button>
+            <a href="{{ auth()->user()->role === 'apotek' ? route('apotek.patients.index') : route('fktp.patients.index') }}" class="btn btn-sm btn-secondary" style="padding: 8px 25px; border-radius: 25px; font-weight: 600;">
+                <i class="bi bi-arrow-clockwise"></i> Reset
+            </a>
+        </div>
     </form>
 </div>
 
@@ -160,6 +211,16 @@ body { background-color: #f5f7fa; }
     <div class="card-container">
         <div class="card shadow-sm rounded-4">
             <div class="card-body p-3">
+                @if($patients->total() > 0)
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <small class="text-muted">
+                        Menampilkan {{ $patients->firstItem() }} - {{ $patients->lastItem() }} dari {{ $patients->total() }} data
+                    </small>
+                    <small class="text-muted">
+                        Halaman {{ $patients->currentPage() }} dari {{ $patients->lastPage() }}
+                    </small>
+                </div>
+                @endif
                 <div class="table-responsive">
                     <table class="table align-middle sortable-table">
                         <thead>
@@ -246,6 +307,9 @@ body { background-color: #f5f7fa; }
 
                         </tbody>
                     </table>
+                    <nav class="pagination-wrapper" aria-label="Pagination Navigation">
+                        {{ $patients->appends(request()->query())->links('pagination::bootstrap-5') }}
+                    </nav>
                 </div>
             </div>
         </div>

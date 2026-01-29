@@ -197,9 +197,11 @@ body {
                     </button>
                 </li>
             </ul>
+            @if(auth()->user()->role !== 'fktp' && auth()->user()->role !== 'apotek')
             <button class="btn btn-outline-primary">
                 <i class="bi bi-plus-lg me-1"></i> Tambah Data
             </button>
+            @endif
         </div>
 
         <div class="tab-content mt-3">

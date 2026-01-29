@@ -83,18 +83,20 @@ $reminder = DiagnosaPrb::join('patients', 'diagnosa_prb.id_pasien', '=', 'patien
     )
     ->get()
     ->map(function ($item) use ($today) {
-
-        $tglKunjungan = Carbon::parse($item->tgl_pelayanan)->addMonth();
-        $h = $today->diffInDays($tglKunjungan, false);
-
-        // TAMPILKAN H-5 s/d H-0
-        if ($h >= 0 && $h <= 5) {
+        $tglKontrol = Carbon::parse($item->tgl_pelayanan)->addMonth();
+        
+        $tglPengingat = $tglKontrol->copy()->subDays(5);
+        
+        if ($today->greaterThanOrEqualTo($tglPengingat) && $today->lessThanOrEqualTo($tglKontrol)) {
+            
+            $daysLeft = (int) $today->diffInDays($tglKontrol, false);
+            
             return (object) [
                 'nama_pasien' => $item->nama_pasien,
                 'diagnosa'    => $item->diagnosa,
-                'tgl_pelayanan_lanjutan' => $tglKunjungan->format('Y-m-d'),
-                'days_left'   => $h,
-                'type'        => $h === 0 ? 'H-0' : 'H-' . $h
+                'tgl_pelayanan_lanjutan' => $tglKontrol->format('Y-m-d'),
+                'days_left'   => $daysLeft,
+                'type'        => 'H-' . $daysLeft
             ];
         }
 
@@ -104,12 +106,27 @@ $reminder = DiagnosaPrb::join('patients', 'diagnosa_prb.id_pasien', '=', 'patien
     ->sortBy('days_left');
 
 
-       if ($reminderFilter !== 'all') {
-    $filterDays = (int) str_replace('h', '', $reminderFilter);
+$allCounts = [
+    'h5' => 0, 'h4' => 0, 'h3' => 0, 
+    'h2' => 0, 'h1' => 0, 'h0' => 0
+];
 
-    $reminder = $reminder->filter(function ($item) use ($filterDays) {
-        return isset($item->days_left) && $item->days_left === $filterDays;
-    });
+foreach($reminder as $r) {
+    if($r->days_left == 5) $allCounts['h5']++;
+    elseif($r->days_left == 4) $allCounts['h4']++;
+    elseif($r->days_left == 3) $allCounts['h3']++;
+    elseif($r->days_left == 2) $allCounts['h2']++;
+    elseif($r->days_left == 1) $allCounts['h1']++;
+    elseif($r->days_left == 0) $allCounts['h0']++;
+}
+
+
+$filteredReminder = $reminder;
+if ($reminderFilter !== 'all') {
+    $filterDays = (int) str_replace('h', '', $reminderFilter);
+    $filteredReminder = $reminder->filter(function ($item) use ($filterDays) {
+        return $item->days_left == $filterDays;
+    })->values();
 }
 
 
@@ -122,6 +139,8 @@ $reminder = DiagnosaPrb::join('patients', 'diagnosa_prb.id_pasien', '=', 'patien
             'chartData',
             'diagnosaTerbanyak',
             'reminder',
+            'filteredReminder',
+            'allCounts',
             'reminderFilter'
         ));
     }

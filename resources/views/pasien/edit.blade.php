@@ -116,41 +116,46 @@
                         <input type="text" name="no_telp" class="form-control" value="{{ $pasien->no_telp }}">
                     </div>
 
-                    {{-- FKTP + Apotek --}}
-                   <label>FKTP Asal</label>
-    <select id="fktp_asal" name="fktp_asal" class="form-control" required>
-        <option value="">-- Pilih FKTP Asal --</option>
+                    <div class="col-md-6 mb-3">
+                        <label>FKTP Asal</label>
+                        <select id="fktp_asal" name="fktp_asal" class="form-control" required>
+                            <option value="">-- Pilih FKTP Asal --</option>
+                            @foreach($fktp as $row)
+                               <option 
+    value="{{ $row->nama_fktp }}"
+    data-apotek="{{ $row->nama_apotek }}"
+    data-kode="{{ $row->kode_fktp ?? $row->fktp_kode ?? '' }}"
+    data-kode-apotek="{{ $row->kode_apotek }}"
+    {{ old('fktp_asal', $pasien->fktp_asal) == $row->nama_fktp ? 'selected' : '' }}
+>
+    {{ $row->nama_fktp }}
+</option>
+                            @endforeach
+                        </select>
+                    </div>
 
-        @foreach($fktp as $row)
-            <option 
-                value="{{ $row->nama_fktp }}"
-                data-apotek="{{ $row->nama_apotek }}"
-                data-kode="{{ $row->kode_fktp ?? $row->fktp_kode ?? '' }}"
-                data-kode-apotek="{{ $row->kode_apotek }}"  
-                {{ old('fktp_asal', $patient->fktp_asal ?? '') == $row->nama_fktp ? 'selected' : '' }}
-            >
-                {{ $row->nama_fktp }}
-            </option>
-        @endforeach
-    </select>
-</div>
+                    <div class="col-md-6 mb-3">
+                        <label>Nama Apotek</label>
+                        <input type="text" id="nama_apotek" name="nama_apotek"
+       class="form-control"
+       value="{{ old('nama_apotek', $pasien->nama_apotek) }}"
+       readonly>
+                    </div>
 
-<input type="hidden" id="fktp_kode" name="fktp_kode" value="{{ old('fktp_kode', $patient->fktp_kode ?? '') }}">
-<input type="hidden" id="kode_apotek" name="kode_apotek" value="{{ old('kode_apotek', $patient->kode_apotek ?? '') }}">
+                   <input type="hidden" id="fktp_kode" name="fktp_kode"
+       value="{{ old('fktp_kode', $pasien->fktp_kode) }}">
 
+<input type="hidden" id="kode_apotek" name="kode_apotek"
+       value="{{ old('kode_apotek', $pasien->kode_apotek) }}">
+                </div>
 
-</div>
-
-<div class="col-md-6 mb-3">
-    <label>Nama Apotek</label>
-    
-    <input  type="text" id="nama_apotek" name="nama_apotek"class="form-control" value="{{ old('nama_apotek', $patient->nama_apotek ?? '') }}"  readonly>
-</div>
-
-    </div>
-
-                <div class="text-end mt-2">
-                    <button type="submit" class="btn btn-primary">Update Pasien</button>
+                <div class="d-flex gap-2 justify-content-end mt-4">
+                    <a href="{{ route('pasien.index') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Batal
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Update Pasien
+                    </button>
                 </div>
 
             </form>
@@ -382,32 +387,34 @@ document.addEventListener("DOMContentLoaded", function () {
         $('.alert').alert('close');
     }, 4000);
 
-    
-    $('#fktp_asal').select2({
+
+    const $fktp = $('#fktp_asal').select2({
         placeholder: "-- Pilih FKTP Asal --",
         allowClear: true,
         width: "100%"
     });
 
-    $('#fktp_asal').on('change', function () {
-        let apotek = $(this).find(':selected').data('apotek') || "-";
+    $fktp.on('change', function () {
+        let selected = $(this).find(':selected');
+
+        let apotek = selected.data('apotek') || "-";
+        let fktpKode = selected.data('kode') || "";
+        let kodeApotek = selected.data('kode-apotek') || "";
+
         $('#nama_apotek').val(apotek);
+        $('#fktp_kode').val(fktpKode);
+        $('#kode_apotek').val(kodeApotek);
     });
 
-    @if(old('fktp_asal'))
-        let selectedOld = $('#fktp_asal').find("option[value='{{ old('fktp_asal') }}']");
-        $('#fktp_asal').val(selectedOld.val()).trigger('change');
-        $('#nama_apotek').val(selectedOld.data('apotek'));
-    @elseif(isset($pasien))
-        let selectedNow = $('#fktp_asal').find("option[value='{{ $pasien->fktp_asal }}']");
-        if(selectedNow.length){
-            $('#fktp_asal').val(selectedNow.val()).trigger('change');
-            $('#nama_apotek').val(selectedNow.data('apotek'));
-        }
-    @endif
 
-  
-    document.getElementById('diagnosaSelect').addEventListener('change', function () {
+    let fktpValue = "{{ old('fktp_asal', $pasien->fktp_asal ?? '') }}";
+
+    if (fktpValue) {
+        $fktp.val(fktpValue).trigger('change');
+    }
+
+
+    document.getElementById('diagnosaSelect')?.addEventListener('change', function () {
         const inputLain = document.getElementById('diagnosaLain');
         inputLain.style.display = this.value === 'Lainnya' ? 'block' : 'none';
     });

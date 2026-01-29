@@ -75,17 +75,23 @@ class ApotekDashboardController extends Controller
         $reminderPengambilan = DiagnosaPrb::join('patients', 'diagnosa_prb.id_pasien', '=', 'patients.id_pasien')
             ->leftJoin('obat_prb', 'diagnosa_prb.id_diagnosa', '=', 'obat_prb.id_diagnosa')
             ->where('patients.kode_apotek', $kodeApotek)
-            ->whereBetween('diagnosa_prb.tgl_pelayanan', [Carbon::now()->subMonths(1)->subDays(5), Carbon::now()->addMonths(1)])
             ->select('diagnosa_prb.*', 'patients.nama_pasien', 'patients.no_kartu_bpjs', 'patients.no_telp', 'obat_prb.nama_obat')
             ->get()
             ->map(function($item) {
                 $serviceDate = Carbon::parse($item->tgl_pelayanan);
-                $pickupDate = $serviceDate->copy()->addMonths(1);
-                $daysDiff = (int) Carbon::now()->diffInDays($pickupDate, false);
-                if ($daysDiff >= 0 && $daysDiff <= 5) {
-                    $item->type = 'H-' . $daysDiff;
-                    $item->pickup_date = $pickupDate->format('Y-m-d');
-                    $item->days_left = $daysDiff;
+                $controlDate = $serviceDate->copy()->addMonth();
+                
+                $reminderStartDate = $controlDate->copy()->subDays(5);
+                
+                $today = Carbon::today();
+                
+                if ($today->greaterThanOrEqualTo($reminderStartDate) && $today->lessThanOrEqualTo($controlDate)) {
+                    
+                    $daysLeft = (int) $today->diffInDays($controlDate, false);
+                    
+                    $item->type = 'H-' . $daysLeft;
+                    $item->pickup_date = $controlDate->format('Y-m-d');
+                    $item->days_left = $daysLeft;
                     return $item;
                 }
                 return null;

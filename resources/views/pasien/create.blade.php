@@ -159,15 +159,16 @@
     <div class="text-end">
         <button type="submit" class="btn btn-primary">Simpan Pasien</button>
     </div>
+    <div class="mt-3 text-end">
+                <a href="{{ route('pasien.index') }}" class="btn btn-secondary">Kembali</a>
+            </div>
 </form>
 
                 </div>
 
             </div>
 
-            <div class="mt-3 text-end">
-                <a href="{{ route('pasien.index') }}" class="btn btn-secondary">Kembali</a>
-            </div>
+            
         </div>
     </div>
 </div>

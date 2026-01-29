@@ -229,7 +229,7 @@ th.sortable.desc::after {
 
 <div class="main-content" id="mainContent">
 <div class="filter-box">
-    <form action="{{ route('pasien.index') }}" method="GET" class="w-100 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <form action="{{ route('pasien.index') }}" method="GET" class="w-100 d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div class="left-section">
             <div class="input-group search-group">
                 <span class="input-group-text">
@@ -260,7 +260,12 @@ th.sortable.desc::after {
             </div>
         </div>
 
-        <button type="submit" class="btn-tampilkan">Tampilkan</button>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn-tampilkan">Tampilkan</button>
+            <a href="{{ route('pasien.index') }}" class="btn btn-sm btn-secondary" style="padding: 8px 25px; border-radius: 25px; font-weight: 600;">
+                <i class="bi bi-arrow-clockwise"></i> Reset
+            </a>
+        </div>
     </form>
 </div>
 
@@ -440,11 +445,15 @@ document.getElementById('exportForm').addEventListener('submit', function (e) {
     document.getElementById('exportEndDate').value = document.getElementById('endDate').value;
 });
 
-
-document.getElementById('searchInput').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        this.closest('form').submit();
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.closest('form').submit();
+            }
+        });
     }
 });
 </script>

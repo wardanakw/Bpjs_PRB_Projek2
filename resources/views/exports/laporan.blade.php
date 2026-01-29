@@ -183,10 +183,7 @@
                             <th>Tanggal Pelayanan</th>
                             <th>Diagnosa</th>
                             <th>Status PRB</th>
-                            <th>Kehadiran</th>
                             <th>Catatan</th>
-                            <th>PDF Klaim</th>
-                            <th>PDF Bukti Bayar</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -201,26 +198,11 @@
                                     {{ $d->status_prb }}
                                 </span>
                                 </td>
-                                <td>{{ $d->kehadiran }}</td>
                                 <td>{{ $d->catatan ?? '-' }}</td>
-                                <td>
-                                    @if($d->file_upload)
-                                        <a href="{{ route('laporan.download.pdf', urlencode($d->file_upload)) }}" target="_blank" class="btn btn-sm btn-outline-primary">Lihat</a>
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($d->obatPrb->first() && $d->obatPrb->first()->bukti_bayar_pdf)
-                                        <a href="{{ route('laporan.download.pdf', urlencode($d->obatPrb->first()->bukti_bayar_pdf)) }}" target="_blank" class="btn btn-sm btn-outline-warning">Lihat</a>
-                                    @else
-                                        -
-                                    @endif
-                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center text-muted">Tidak ada data</td>
+                                <td colspan="6" class="text-center text-muted">Tidak ada data</td>
                             </tr>
                         @endforelse
                     </tbody>

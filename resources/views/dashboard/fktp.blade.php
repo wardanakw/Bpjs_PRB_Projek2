@@ -264,28 +264,11 @@ h6 {
 
         {{-- Counter untuk setiap kategori --}}
         <div class="row g-2 mb-3 text-center">
-            @php
-                $counts = [
-                    'h5' => 0, 'h4' => 0, 'h3' => 0, 
-                    'h2' => 0, 'h1' => 0, 'h0' => 0
-                ];
-                
-                foreach($reminder as $r) {
-                    if($r->days_left == 5) $counts['h5']++;
-                    elseif($r->days_left == 4) $counts['h4']++;
-                    elseif($r->days_left == 3) $counts['h3']++;
-                    elseif($r->days_left == 2) $counts['h2']++;
-                    elseif($r->days_left == 1) $counts['h1']++;
-                    elseif($r->days_left === 0) $counts['h0']++;
-
-                }
-            @endphp
-            
             @foreach(['h5', 'h4', 'h3', 'h2', 'h1', 'h0'] as $filterKey)
                 <div class="col">
                     <div class="small-card {{ $reminderFilter == $filterKey ? 'active-filter' : '' }}" 
                          onclick="location.href='{{ request()->fullUrlWithQuery(['reminder_filter' => $filterKey]) }}'">
-                        <div class="fw-bold">{{ $counts[$filterKey] }}</div>
+                        <div class="fw-bold">{{ $allCounts[$filterKey] }}</div>
                         <small>
                             @if($filterKey == 'h0')
                                 H-0
@@ -300,21 +283,20 @@ h6 {
 
         {{-- List Reminder --}}
         <div class="reminder-list">
-            @forelse($reminder as $r)
+            @forelse($filteredReminder as $r)
                 @php
                     $bgClass = 'bg-info';
                     if($r->days_left <= 0) $bgClass = 'bg-warning';
                     if($r->days_left <= -1) $bgClass = 'bg-danger';
                 @endphp
                 
-                <div class="patient-card" >
-                        <div>
-                            <strong>{{ $r->nama_pasien }}</strong><br>
-                            <small class="text-muted">{{ $r->diagnosa }}</small><br>
-                            <small>Tgl Lanjutan: {{ \Carbon\Carbon::parse($r->tgl_pelayanan_lanjutan)->format('d/m/Y') }}</small>
-                        </div>
-                        <span class="badge {{ $bgClass }}">{{ $r->type }}</span>
+                <div class="patient-card">
+                    <div>
+                        <strong>{{ $r->nama_pasien }}</strong><br>
+                        <small class="text-muted">{{ $r->diagnosa }}</small><br>
+                        <small>Tgl Lanjutan: {{ \Carbon\Carbon::parse($r->tgl_pelayanan_lanjutan)->format('d/m/Y') }}</small>
                     </div>
+                    <span class="badge {{ $bgClass }}">{{ $r->type }}</span>
                 </div>
             @empty
                 <div class="text-center py-4">

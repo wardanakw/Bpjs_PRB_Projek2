@@ -229,9 +229,11 @@ body {
                     </button>
                 </li>
             </ul>
+            @if(auth()->user()->role !== 'fktp' && auth()->user()->role !== 'apotek')
             <button class="btn btn-outline-primary" onclick="window.location.href='{{ route('pasien.addDiagnosis', $pasien->id_pasien) }}'">
                 <i class="bi bi-plus-lg me-1"></i> Tambah Diagnosis Baru
             </button>
+            @endif
         </div>
 
         <div class="tab-content mt-3">
