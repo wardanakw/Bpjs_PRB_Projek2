@@ -32,7 +32,7 @@
                 <option value="">-- Pilih Role --</option>
                 <option value="fktp" {{ old('role') == 'fktp' ? 'selected' : '' }}>FKTP</option>
                 <option value="rumah_sakit" {{ old('role') == 'rumah_sakit' ? 'selected' : '' }}>Rumah Sakit</option>
-                <option value="apotek" {{ old('role') == 'apotek' ? 'selected' : '' }}>Apotek</option>
+                <!-- <option value="apotek" {{ old('role') == 'apotek' ? 'selected' : '' }}>Apotek</option> -->
               </select>
               @error('role')
                 <div class="invalid-feedback">{{ $message }}</div>

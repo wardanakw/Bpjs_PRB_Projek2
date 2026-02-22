@@ -248,7 +248,7 @@ th.sortable.desc::after {
                     <option value="">-- Semua Sumber --</option>
                     <option value="rumah_sakit" {{ request('input_role') === 'rumah_sakit' ? 'selected' : '' }}>Rumah Sakit</option>
                     <option value="fktp" {{ request('input_role') === 'fktp' ? 'selected' : '' }}>FKTP</option>
-                    <option value="apotek" {{ request('input_role') === 'apotek' ? 'selected' : '' }}>Apotek</option>
+                    <!-- <option value="apotek" {{ request('input_role') === 'apotek' ? 'selected' : '' }}>Apotek</option> -->
                 </select>
             </div>
             @endif
@@ -328,7 +328,7 @@ th.sortable.desc::after {
                                 <th>Input By</th>
                                 @endif
                                 @if(auth()->user()->role === 'admin')
-                                <th class="text-center">Bukti Bayar Apotek</th>
+                                <!-- <th class="text-center">Bukti Bayar Apotek</th> -->
                                 @endif
                                 <th class="text-center">Aksi</th>
                             </tr>
@@ -341,15 +341,11 @@ th.sortable.desc::after {
         @endphp
         
         <tr>
-            <!-- No SRB -->
+           
             <td>
                 {{ $latestDiagnosa->no_sep ?? $pasien->no_sep ?? '-' }}
             </td>
-            
-            <!-- No Kartu BPJS -->
             <td>{{ $pasien->no_kartu_bpjs }}</td>
-            
-            <!-- Diagnosa -->
             <td>
                 @if($latestDiagnosa)
                     {{ $latestDiagnosa->diagnosa ?? '-' }}
@@ -357,8 +353,6 @@ th.sortable.desc::after {
                     <span class="empty-text">Belum ada diagnosa</span>
                 @endif
             </td>
-            
-            <!-- Status PRB -->
             <td>
                 @if($latestDiagnosa)
                     <span class="badge {{ $latestDiagnosa->status_prb == 'Aktif' ? 'badge-aktif' : 'badge-nonaktif' }}">
@@ -368,8 +362,6 @@ th.sortable.desc::after {
                     <span class="badge badge-nonaktif">Tidak Aktif</span>
                 @endif
             </td>
-            
-            <!-- Tgl Pelayanan -->
             <td>
                 @if($latestDiagnosa && $latestDiagnosa->tgl_pelayanan)
                     {{ \Carbon\Carbon::parse($latestDiagnosa->tgl_pelayanan)->format('d/m/Y') }}
@@ -377,8 +369,6 @@ th.sortable.desc::after {
                     -
                 @endif
             </td>
-            
-            <!-- Input By (untuk rumah sakit) -->
             @if(auth()->user()->role === 'rumah_sakit')
             <td>
                 <span class="badge {{ $pasien->creator->role === 'rumah_sakit' ? 'bg-danger' : ($pasien->creator->role === 'fktp' ? 'bg-primary' : 'bg-success') }}">
@@ -386,9 +376,7 @@ th.sortable.desc::after {
                 </span>
             </td>
             @endif
-            
-            <!-- Bukti Bayar Apotek (untuk admin) -->
-            @if(auth()->user()->role === 'admin')
+            <!-- @if(auth()->user()->role === 'admin')
             <td class="text-center">
                 @if($latestDiagnosa && $latestDiagnosa->obatPrb->isNotEmpty() && $latestDiagnosa->obatPrb->first()->bukti_bayar_pdf)
                     <a href="{{ route('laporan.download.pdf', urlencode($latestDiagnosa->obatPrb->first()->bukti_bayar_pdf)) }}" 
@@ -400,9 +388,7 @@ th.sortable.desc::after {
                     <span class="text-muted">-</span>
                 @endif
             </td>
-            @endif
-            
-            <!-- Aksi -->
+            @endif -->
             <td class="text-center">
                 <div class="d-flex justify-content-center gap-1">
                     <a href="{{ route('pasien.show', $pasien->id_pasien) }}" 

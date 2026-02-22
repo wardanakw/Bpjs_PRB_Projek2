@@ -252,7 +252,7 @@ body {
                                     <th>Status PRB</th>
                                     <th>Dosis Obat</th>
                                     <th>File</th>
-                                    <th>Bukti Bayar Apotek</th>
+                                    <!-- <th>Bukti Bayar Apotek</th> -->
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -270,8 +270,6 @@ body {
         <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#obatModal-{{ $diagnosa->id_diagnosa }}">
             <i class="bi bi-eye"></i> Lihat Obat ({{ $diagnosa->obatPrb->count() }})
         </button>
-
-        <!-- Modal: Obat per Diagnosa -->
         <div class="modal fade" id="obatModal-{{ $diagnosa->id_diagnosa }}" tabindex="-1" aria-labelledby="obatModalLabel-{{ $diagnosa->id_diagnosa }}" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
@@ -311,13 +309,13 @@ body {
                                                 <span class="text-muted">Tidak ada</span>
                                             @endif
                                         </td>
-                                        <td>
+                                        <!-- <td>
                                             @if($diagnosa->obatPrb->first() && $diagnosa->obatPrb->first()->bukti_bayar_pdf)
                                                 <a href="{{ route('laporan.download.pdf', urlencode($diagnosa->obatPrb->first()->bukti_bayar_pdf)) }}" target="_blank" class="btn btn-sm btn-outline-warning">Lihat</a>
                                             @else
                                                 <span class="text-muted">-</span>
                                             @endif
-                                        </td>
+                                        </td> -->
                                         <td>
                                             <a href="{{ route('pasien.edit', $pasien->id_pasien) }}" class="btn btn-sm btn-primary">Edit</a>
                                         </td>
@@ -355,7 +353,7 @@ body {
                                     <th>Dosis Obat</th>
                                     <th>File</th>
                                     @if(auth()->user()->role === 'admin')
-                                    <th>Bukti Bayar Apotek</th>
+                                    <!-- <th>Bukti Bayar Apotek</th> -->
                                     @endif
                                     <th>Aksi</th>
                                 </tr>
@@ -422,7 +420,7 @@ body {
         <span class="text-muted">Tidak ada</span>
     @endif
 </td>
-                                @if(auth()->user()->role === 'admin')
+                                <!-- @if(auth()->user()->role === 'admin')
                                 <td>
                                     @if($diagnosa->obatPrb->first() && $diagnosa->obatPrb->first()->bukti_bayar_pdf)
                                         <a href="{{ route('laporan.download.pdf', urlencode($diagnosa->obatPrb->first()->bukti_bayar_pdf)) }}" target="_blank" class="btn btn-sm btn-outline-warning">Lihat</a>
@@ -430,7 +428,7 @@ body {
                                         <span class="text-muted">-</span>
                                     @endif
                                 </td>
-                                @endif
+                                @endif -->
 
                                         <td>
                                             <a href="{{ route('pasien.edit', $pasien->id_pasien) }}" class="btn btn-sm btn-primary">Edit</a>

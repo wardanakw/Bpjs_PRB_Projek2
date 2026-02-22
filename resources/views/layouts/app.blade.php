@@ -274,7 +274,7 @@
         <li>
             <a href="{{ route('pasien.index') }}">
                 <i class="bi bi-clipboard-data"></i>
-                <span>Data Pasien Rumah Sakit</span>
+                <span>Data Pasien </span>
             </a>
         </li>
         <li>

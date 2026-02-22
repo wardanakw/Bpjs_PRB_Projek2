@@ -20,7 +20,7 @@
                 <div class="col-md-6">
                     <label for="search" class="form-label">Cari Nama/Kode Faskes</label>
                     <input type="text" class="form-control" id="search" name="search" 
-                           placeholder="Cari nama rumah sakit, FKTP, atau Apotek..." 
+                           placeholder="Cari nama rumah sakit dan FKTP" 
                            value="{{ request('search') }}">
                 </div>
 
@@ -30,7 +30,7 @@
                         <option value="">-- Semua Role --</option>
                         <option value="rumah_sakit" {{ request('role') === 'rumah_sakit' ? 'selected' : '' }}>Rumah Sakit</option>
                         <option value="fktp" {{ request('role') === 'fktp' ? 'selected' : '' }}>FKTP</option>
-                        <option value="apotek" {{ request('role') === 'apotek' ? 'selected' : '' }}>Apotek</option>
+                        <!-- <option value="apotek" {{ request('role') === 'apotek' ? 'selected' : '' }}>Apotek</option> -->
                     </select>
                 </div>
 
