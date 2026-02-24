@@ -30,7 +30,7 @@
                         <option value="">-- Semua Role --</option>
                         <option value="rumah_sakit" {{ request('role') === 'rumah_sakit' ? 'selected' : '' }}>Rumah Sakit</option>
                         <option value="fktp" {{ request('role') === 'fktp' ? 'selected' : '' }}>FKTP</option>
-                        <!-- <option value="apotek" {{ request('role') === 'apotek' ? 'selected' : '' }}>Apotek</option> -->
+                        <option value="apotek" {{ request('role') === 'apotek' ? 'selected' : '' }}>Apotek</option>
                     </select>
                 </div>
 

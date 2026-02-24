@@ -191,8 +191,16 @@
 
                     <div class="col-md-6 mb-3">
                         <label>No Telp PIC</label>
-                        <input type="text" name="no_telp_pic" class="form-control"
-                               value="{{ old('no_telp_pic') }}" required>
+                        <input type="text" name="no_telp_pic" id="nomorPicInput" class="form-control"
+                               value="{{ old('no_telp_pic', $nomorPic ?? '') }}" required>
+                        <small class="text-muted d-block mt-1">
+                            @if($nomorPic)
+                                <i class="bi bi-check-circle" style="color: #28a745;"></i> 
+                                <span id="autofillLabel">Terisi otomatis dari nomor PIC fasilitas kesehatan Anda</span>
+                            @else
+                                <span>Masukkan nomor telepon PIC</span>
+                            @endif
+                        </small>
                     </div>
 
                     <div class="col-md-6 mb-3">

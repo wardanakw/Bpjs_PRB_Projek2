@@ -248,7 +248,7 @@ th.sortable.desc::after {
                     <option value="">-- Semua Sumber --</option>
                     <option value="rumah_sakit" {{ request('input_role') === 'rumah_sakit' ? 'selected' : '' }}>Rumah Sakit</option>
                     <option value="fktp" {{ request('input_role') === 'fktp' ? 'selected' : '' }}>FKTP</option>
-                    <!-- <option value="apotek" {{ request('input_role') === 'apotek' ? 'selected' : '' }}>Apotek</option> -->
+                    <option value="apotek" {{ request('input_role') === 'apotek' ? 'selected' : '' }}>Apotek</option>
                 </select>
             </div>
             @endif
@@ -328,7 +328,7 @@ th.sortable.desc::after {
                                 <th>Input By</th>
                                 @endif
                                 @if(auth()->user()->role === 'admin')
-                                <!-- <th class="text-center">Bukti Bayar Apotek</th> -->
+                                <th class="text-center">Bukti Bayar Apotek</th>
                                 @endif
                                 <th class="text-center">Aksi</th>
                             </tr>
@@ -376,7 +376,7 @@ th.sortable.desc::after {
                 </span>
             </td>
             @endif
-            <!-- @if(auth()->user()->role === 'admin')
+            @if(auth()->user()->role === 'admin')
             <td class="text-center">
                 @if($latestDiagnosa && $latestDiagnosa->obatPrb->isNotEmpty() && $latestDiagnosa->obatPrb->first()->bukti_bayar_pdf)
                     <a href="{{ route('laporan.download.pdf', urlencode($latestDiagnosa->obatPrb->first()->bukti_bayar_pdf)) }}" 
@@ -388,7 +388,7 @@ th.sortable.desc::after {
                     <span class="text-muted">-</span>
                 @endif
             </td>
-            @endif -->
+            @endif
             <td class="text-center">
                 <div class="d-flex justify-content-center gap-1">
                     <a href="{{ route('pasien.show', $pasien->id_pasien) }}" 

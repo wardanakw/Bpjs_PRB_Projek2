@@ -233,7 +233,11 @@ public function create()
     $obat = $diagnosa ? $diagnosa->obatPrb : collect();
     $fktp = RelasiFktpApotek::orderBy('nama_fktp')->get();
 
-    return view('pasien.edit', compact('pasien', 'diagnosa', 'obat', 'fktp'));
+    // Get nomor_pic from faskes of logged-in user
+    $farkes = \App\Models\Faskes::where('user_id', auth()->user()->id_user)->first();
+    $nomorPic = $farkes ? $farkes->nomor_pic : null;
+
+    return view('pasien.edit', compact('pasien', 'diagnosa', 'obat', 'fktp', 'nomorPic'));
 }
 
   public function update(Request $request, $id)
@@ -471,7 +475,11 @@ public function create()
 
         $fktp = RelasiFktpApotek::orderBy('nama_fktp')->get();
 
-        return view('pasien.add-diagnosis', compact('pasien', 'isCorrectFktp', 'fktp'));
+        // Get nomor_pic from faskes of logged-in user
+        $farkes = \App\Models\Faskes::where('user_id', auth()->user()->id_user)->first();
+        $nomorPic = $farkes ? $farkes->nomor_pic : null;
+
+        return view('pasien.add-diagnosis', compact('pasien', 'isCorrectFktp', 'fktp', 'nomorPic'));
     }
 
     public function storeDiagnosis(Request $request, $id)

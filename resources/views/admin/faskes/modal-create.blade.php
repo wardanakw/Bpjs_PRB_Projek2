@@ -32,7 +32,7 @@
                 <option value="">-- Pilih Role --</option>
                 <option value="fktp" {{ old('role') == 'fktp' ? 'selected' : '' }}>FKTP</option>
                 <option value="rumah_sakit" {{ old('role') == 'rumah_sakit' ? 'selected' : '' }}>Rumah Sakit</option>
-                <!-- <option value="apotek" {{ old('role') == 'apotek' ? 'selected' : '' }}>Apotek</option> -->
+                <option value="apotek" {{ old('role') == 'apotek' ? 'selected' : '' }}>Apotek</option>
               </select>
               @error('role')
                 <div class="invalid-feedback">{{ $message }}</div>
@@ -181,15 +181,13 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('=== FASKES FORM INITIALIZATION ===');
-    
-    // Gunakan selector yang spesifik untuk modal ini
+   
     const modal = document.getElementById('createFaskesModal');
     if (!modal) {
         console.error('Modal not found!');
         return;
     }
     
-    // Cari elemen DI DALAM modal saja
     const roleSelect = modal.querySelector('#role_faskes');
     const kodeFaskesContainer = modal.querySelector('#kode-faskes-container');
     const kodeApotekContainer = modal.querySelector('#kode-apotek-container');
@@ -205,19 +203,16 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('Essential elements not found in modal!');
         return;
     }
-    
-    // Fungsi untuk toggle field
+  
     function updateFields() {
         const role = roleSelect.value;
         console.log('Role selected:', role);
         
         if (role === 'apotek') {
-            // Tampilkan apotek, sembunyikan faskes
             if (kodeFaskesContainer) kodeFaskesContainer.style.display = 'none';
             if (kodeApotekContainer) kodeApotekContainer.style.display = 'block';
             console.log('Showing apotek field');
         } else if (role) {
-            // Tampilkan faskes, sembunyikan apotek (untuk fktp dan rumah_sakit)
             if (kodeFaskesContainer) kodeFaskesContainer.style.display = 'block';
             if (kodeApotekContainer) kodeApotekContainer.style.display = 'none';
             console.log('Showing faskes field for role:', role);
@@ -244,7 +239,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             let isValid = true;
             
-            // Set nilai ke hidden fields berdasarkan role
             if (role === 'apotek') {
                 const selectedApotek = displayKodeApotek ? displayKodeApotek.value : '';
                 console.log('Selected apotek value:', selectedApotek);
@@ -254,7 +248,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (displayKodeApotek) displayKodeApotek.focus();
                     isValid = false;
                 } else {
-                    // Untuk apotek, gunakan kode_apotek sebagai kode_faskes juga
                     if (actualKodeApotek) actualKodeApotek.value = selectedApotek;
                     if (actualKodeFaskes) actualKodeFaskes.value = selectedApotek;
                     console.log('Set values for apotek:', {
@@ -294,8 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     updateFields();
-    
-    // Handle modal events
+  
     modal.addEventListener('show.bs.modal', function() {
         console.log('Modal opened');
         updateFields();

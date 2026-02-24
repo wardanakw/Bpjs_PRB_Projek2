@@ -106,7 +106,24 @@ h6 {
     overflow-y: auto;
 }
 
-/* Warna untuk badge reminder */
+.diagnosa-table-container {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.diagnosa-table-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.diagnosa-table-container::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 4px;
+}
+
+.diagnosa-table-container::-webkit-scrollbar-thumb:hover {
+    background-color: #999;
+}
+
 .badge.bg-info { background-color: #17a2b8 !important; }
 .badge.bg-warning { background-color: #ffc107 !important; color: #212529 !important; }
 .badge.bg-danger { background-color: #dc3545 !important; }
@@ -166,15 +183,16 @@ h6 {
 
             <div class="bg-white rounded p-4">
                 <h6>Diagnosa Terbanyak</h6>
-                <table class="table table-borderless align-middle">
-                    <thead>
-                        <tr>
-                            <th style="width: 10%">No</th>
-                            <th>Diagnosa</th>
-                            <th style="width: 20%">%</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <div class="diagnosa-table-container">
+                    <table class="table table-borderless align-middle">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%">No</th>
+                                <th>Diagnosa</th>
+                                <th style="width: 20%">%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
     @forelse ($reminder as $r)
         <tr>
             <td>{{ $r->nama_pasien }}</td>
@@ -198,8 +216,8 @@ h6 {
         </tr>
     @endforelse
 </tbody>
-
-                </table>
+                        </table>
+                    </div>
             </div>
         </div>
 

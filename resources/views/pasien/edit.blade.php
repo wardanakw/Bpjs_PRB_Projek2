@@ -167,8 +167,8 @@
 
             @php
                 $listDiagnosa = ['Diabetes Melitus','Hipertensi','Penyakit Jantung','Asma','PPOK','Epilepsi','Skizofrenia','Stroke','SLE'];
-                $selectedDiagnosa = old('diagnosa', $diagnosa->diagnosa ?? '');
-                $diagnosaLain = old('diagnosa_lain', $diagnosa->diagnosa_lain ?? '');
+                $selectedDiagnosa = old('diagnosa', $diagnosa?->diagnosa ?? '');
+                $diagnosaLain = old('diagnosa_lain', $diagnosa?->diagnosa_lain ?? '');
             @endphp
 
             <form id="formDiagnosa"
@@ -213,35 +213,48 @@
                     <div class="col-md-6 mb-3">
                         <label>Tanggal Pemeriksaan</label>
                         <input type="date" name="tgl_pelayanan" class="form-control"
-                               value="{{ $diagnosa->tgl_pelayanan ?? '' }}" required>
+                               value="{{ $diagnosa?->tgl_pelayanan ?? '' }}" required>
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label>Status PRB</label>
                         <input type="text" class="form-control" name="status_prb"
-                               value="{{ $diagnosa->status_prb ?? 'Belum Aktif' }}" readonly>
+                               value="{{ $diagnosa?->status_prb ?? 'Belum Aktif' }}" readonly>
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label>No Telp PIC</label>
                         <input type="text" name="no_telp_pic" class="form-control"
-                               value="{{ $diagnosa->no_telp_pic ?? '' }}" required>
+                               value="{{ old('no_telp_pic', $diagnosa?->no_telp_pic ?? $nomorPic ?? '') }}" required>
+                        <small class="text-muted d-block mt-1">
+                            @if($nomorPic && !$diagnosa?->no_telp_pic)
+                                <i class="bi bi-check-circle" style="color: #28a745;"></i> 
+                                <span>Terisi otomatis dari nomor PIC fasilitas kesehatan Anda</span>
+                            @else
+                                <span>Nomor telepon PIC</span>
+                            @endif
+                        </small>
                     </div>
 
                     <div class="col-md-12 mb-3">
                         <label>Catatan</label>
-                        <textarea name="catatan" class="form-control">{{ $diagnosa->catatan ?? '' }}</textarea>
+                        <textarea name="catatan" class="form-control">{{ $diagnosa?->catatan ?? '' }}</textarea>
                     </div>
 
                     <div class="col-md-12 mb-3">
                         <label>Upload Hasil Pemeriksaan</label>
                         <input type="file" class="form-control" name="file_upload">
+                        <small class="text-muted d-block mt-1">Format: PDF, JPG, PNG, DOC, DOCX (Max 2MB)</small>
                         
-                        @if(isset($diagnosa) && $diagnosa->file_upload)
-                            <a href="{{ route('pasien.diagnosa.file', $diagnosa->id_diagnosa) }}"
-                               class="btn btn-outline-primary btn-sm mt-2" target="_blank">
-                                Lihat File Aman
-                            </a>
+                        @if($diagnosa?->file_upload)
+                            <div class="alert alert-success alert-sm mt-2 mb-0 p-2" role="alert">
+                                <i class="bi bi-check-circle"></i>
+                                <strong>File tersimpan:</strong> {{ $diagnosa?->file_upload }}
+                                <a href="{{ route('pasien.diagnosa.file', $diagnosa->id_diagnosa) }}"
+                                   class="btn btn-sm btn-outline-primary ms-2" target="_blank">
+                                    <i class="bi bi-download"></i> Lihat File
+                                </a>
+                            </div>
                         @endif
                     </div>
 
@@ -249,13 +262,15 @@
                     <div class="col-md-12 mb-3">
                         <label>Upload Bukti Bayar Apotek (PDF)</label>
                         <input type="file" class="form-control" name="bukti_bayar_pdf" accept="application/pdf">
-                        <small class="text-muted">Maksimal 5MB, format PDF</small>
+                        <small class="text-muted d-block mt-1">Maksimal 5MB, format PDF</small>
                         
-                        @if(isset($diagnosa) && $diagnosa->obatPrb->first() && $diagnosa->obatPrb->first()->bukti_bayar_pdf)
-                            <div class="mt-2">
+                        @if($diagnosa?->obatPrb?->first()?->bukti_bayar_pdf)
+                            <div class="alert alert-info alert-sm mt-2 mb-0 p-2" role="alert">
+                                <i class="bi bi-file-pdf"></i>
+                                <strong>File tersimpan:</strong> {{ $diagnosa->obatPrb->first()->bukti_bayar_pdf }}
                                 <a href="{{ route('laporan.download.pdf', urlencode($diagnosa->obatPrb->first()->bukti_bayar_pdf)) }}"
-                                   class="btn btn-outline-info btn-sm" target="_blank">
-                                    <i class="bi bi-file-pdf"></i> Lihat Bukti Bayar
+                                   class="btn btn-sm btn-outline-info ms-2" target="_blank">
+                                    <i class="bi bi-download"></i> Download
                                 </a>
                             </div>
                         @endif
@@ -281,7 +296,7 @@
             <form action="{{ route('pasien.obat.store') }}" method="POST" class="mb-3">
                 @csrf
 
-                <input type="hidden" name="id_diagnosa" value="{{ $diagnosa->id_diagnosa ?? '' }}">
+                <input type="hidden" name="id_diagnosa" value="{{ $diagnosa?->id_diagnosa ?? '' }}">
 
                 <div class="row g-3">
 
@@ -325,7 +340,7 @@
                         @csrf
                         @method('PUT')
 
-                        <input type="hidden" name="id_diagnosa" value="{{ $diagnosa->id_diagnosa ?? '' }}">
+                        <input type="hidden" name="id_diagnosa" value="{{ $diagnosa?->id_diagnosa ?? '' }}">
 
                         <div class="row g-2">
 

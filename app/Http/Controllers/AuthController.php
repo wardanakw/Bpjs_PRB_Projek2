@@ -43,15 +43,15 @@ class AuthController extends Controller
         return back()->withErrors(['login_error' => 'Username atau password salah.']);
     }
 
-    Log::info('Login attempt', [
-        'username' => $request->username,
-        'password_match' => $user ? Hash::check($request->password, $user->password) : null,
-    ]);
+    // Log::info('Login attempt', [
+    //     'username' => $request->username,
+    //     'password_match' => $user ? Hash::check($request->password, $user->password) : null,
+    // ]);
 
-    Log::info('Login input', [
-        'input_username' => $request->username,
-        'input_password' => $request->password,
-    ]);
+    // Log::info('Login input', [
+    //     'input_username' => $request->username,
+    //     'input_password' => $request->password,
+    // ]);
 
     $guard = $user->role;
     Auth::guard($guard)->login($user);
@@ -59,15 +59,15 @@ class AuthController extends Controller
 
     $request->session()->regenerate();
 
-    Log::info('AuthController@login', [
-        'user_id' => $user->{$user->getKeyName()} ?? null,
-        'username' => $user->username ?? null,
-        'role' => $user->role ?? null,
-        'guard_used' => $guard,
-        'guard_check' => Auth::guard($guard)->check(),
-        'session_id' => session()->getId(),
-        'session_cookie' => config('session.cookie'),
-    ]);
+    // Log::info('AuthController@login', [
+    //     'user_id' => $user->{$user->getKeyName()} ?? null,
+    //     'username' => $user->username ?? null,
+    //     'role' => $user->role ?? null,
+    //     'guard_used' => $guard,
+    //     'guard_check' => Auth::guard($guard)->check(),
+    //     'session_id' => session()->getId(),
+    //     'session_cookie' => config('session.cookie'),
+    // ]);
 
     $routeName = null;
     switch ($guard) {

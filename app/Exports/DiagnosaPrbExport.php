@@ -10,22 +10,38 @@ class DiagnosaPrbExport implements FromCollection, WithHeadings
 {
     protected $startDate;
     protected $endDate;
+    protected $ftpKode;
+    protected $userRole;
 
-    public function __construct($startDate = null, $endDate = null)
+    public function __construct($startDate = null, $endDate = null, $ftpKode = null, $userRole = null)
     {
         $this->startDate = $startDate;
         $this->endDate = $endDate;
+        $this->ftpKode = $ftpKode;
+        $this->userRole = $userRole;
     }
 
     public function collection()
     {
-        $query = DiagnosaPrb::with('patient');
+        $query = DiagnosaPrb::query()
+            ->with('patient')
+            ->join('patients', 'diagnosa_prb.id_pasien', '=', 'patients.id_pasien');
 
-        if ($this->startDate && $this->endDate) {
-            $query->whereBetween('tgl_pelayanan', [$this->startDate, $this->endDate]);
+        if ($this->userRole !== 'admin') {
+            if ($this->userRole === 'fktp') {
+
+                $query->where('patients.fktp_kode', $this->ftpKode);
+            } elseif ($this->userRole === 'rumah_sakit') {
+            
+                $query->where('patients.created_by', $this->ftpKode);
+            }
         }
 
-        return $query->get()->map(function ($item) {
+        if ($this->startDate && $this->endDate) {
+            $query->whereBetween('diagnosa_prb.tgl_pelayanan', [$this->startDate, $this->endDate]);
+        }
+
+        return $query->select('diagnosa_prb.*')->orderBy('diagnosa_prb.tgl_pelayanan', 'desc')->get()->map(function ($item) {
             return [
                 'ID Diagnosa' => $item->id_diagnosa,
                 'No Kartu BPJS' => $item->patient->no_kartu_bpjs ?? '-',
