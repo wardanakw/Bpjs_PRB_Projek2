@@ -279,6 +279,8 @@ public function create()
             'diagnosa' => 'required|string|max:255',
             'diagnosa_lain' => 'nullable|string|max:255',
             'tgl_pelayanan' => 'required|date',
+            'status_prb' => 'nullable|string|max:100',
+            'no_telp_pic' => 'required|string|max:20',
             'catatan' => 'nullable|string',
             'file_upload' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:2048',
             'bukti_bayar_pdf' => 'nullable|file|mimes:pdf|max:5120',
@@ -321,7 +323,7 @@ public function create()
             'file_upload' => $diagnosa->file_upload,
         ]);
 
-        return redirect()->route('pasien.edit', $diagnosa->id_pasien)->with('success', 'Diagnosa berhasil diperbarui.');
+        return redirect()->route('pasien.edit', $diagnosa->id_pasien)->with('success', 'Diagnosa berhasil diperbarui. File berhasil disimpan.');
     }
 
     public function updateObat(Request $request, $id_obat = null)

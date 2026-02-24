@@ -243,8 +243,11 @@
 
                     <div class="col-md-12 mb-3">
                         <label>Upload Hasil Pemeriksaan</label>
-                        <input type="file" class="form-control" name="file_upload">
+                        <input type="file" class="form-control @error('file_upload') is-invalid @enderror" name="file_upload">
                         <small class="text-muted d-block mt-1">Format: PDF, JPG, PNG, DOC, DOCX (Max 2MB)</small>
+                        @error('file_upload')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                         
                         @if($diagnosa?->file_upload)
                             <div class="alert alert-success alert-sm mt-2 mb-0 p-2" role="alert">
