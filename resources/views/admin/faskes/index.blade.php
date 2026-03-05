@@ -78,7 +78,24 @@
                                 <i class="bi bi-eye"></i> Detail
                             </a>
                         @endif
-                        <button class="btn btn-sm btn-info" disabled>Edit</button>
+                        <button class="btn btn-sm btn-info" data-edit-faskes="{{ json_encode([
+                            'id' => $item->id,
+                            'user_name' => $item->user->name,
+                            'role' => $item->user->role,
+                            'kode_faskes' => $item->kode_faskes,
+                            'kode_apotek' => $item->kode_apotek,
+                            'nama_faskes' => $item->nama_faskes,
+                            'jenis_faskes' => $item->jenis_faskes,
+                            'alamat_faskes' => $item->alamat_faskes,
+                            'kecamatan' => $item->kecamatan,
+                            'kabupaten' => $item->kabupaten,
+                            'provinsi' => $item->provinsi,
+                            'kode_pos' => $item->kode_pos,
+                            'nomor_pic' => $item->nomor_pic,
+                            'username' => $item->user->username
+                        ]) }}">
+                            <i class="bi bi-pencil"></i> Edit
+                        </button>
                  <form action="{{ route('admin.faskes.destroy', $item->id) }}" 
       method="POST" class="d-inline"
       onsubmit="return confirm('Yakin ingin menghapus faskes ini?')">
@@ -102,5 +119,8 @@
 
 {{-- Modal Create --}}
 @include('admin.faskes.modal-create')
+
+{{-- Modal Edit --}}
+@include('admin.faskes.modal-edit')
 
 @endsection

@@ -89,13 +89,6 @@
         font-weight: bold;
     }
 
-    .progress-bar {
-        background-color: #0078D7;
-        height: 6px;
-        border-radius: 3px;
-        margin-top: 8px;
-    }
-
     .section-title {
         font-size: 18px;
         font-weight: 600;
@@ -103,14 +96,6 @@
         margin-bottom: 15px;
         padding-left: 10px;
         border-left: 4px solid #0078D7;
-    }
-
-    .chart-container {
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        margin-bottom: 20px;
     }
 
     .btn-filter {
@@ -275,9 +260,8 @@
                             <thead>
                                 <tr>
                                     <th style="width: 5%;">No</th>
-                                    <th style="width: 60%;">Nama Obat</th>
+                                    <th style="width: 75%;">Nama Obat</th>
                                     <th style="width: 20%; text-align: center;">Jumlah</th>
-                                    <th style="width: 15%; text-align: center;">Persentase</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -293,14 +277,6 @@
                                         <td>{{ $obat->nama_obat }}</td>
                                         <td style="text-align: center;">
                                             <span class="badge badge-primary">{{ $obat->total }}</span>
-                                        </td>
-                                        <td style="text-align: center;">
-                                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 5px;">
-                                                <div style="width: 60px; background-color: #eee; border-radius: 3px; overflow: hidden;">
-                                                    <div class="progress-bar" style="width: {{ $percentage }}%"></div>
-                                                </div>
-                                                <span style="font-weight: 600; color: #0078D7; min-width: 50px;">{{ number_format($percentage, 1) }}%</span>
-                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -324,41 +300,7 @@
         </div>
     </div>
 
-    <!-- Chart 12 Bulan -->
-    <div class="chart-container" style="margin-top: 20px;">
-        <h5 class="section-title">Tren Obat Keluar 12 Bulan Terakhir</h5>
-        <div class="table-responsive">
-            <table class="table table-sm">
-                <thead>
-                    <tr>
-                        <th>Bulan</th>
-                        <th style="text-align: center;">Total Obat</th>
-                        <th style="text-align: center;">Grafik</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @php
-                        $maxCountMonthly = max(array_column($obatKeluar12Bulan, 'total'));
-                    @endphp
-                    @foreach($obatKeluar12Bulan as $data)
-                        <tr>
-                            <td>{{ $data['bulan'] }} {{ $data['tahun'] }}</td>
-                            <td style="text-align: center;">
-                                <span class="badge badge-primary">{{ $data['total'] }}</span>
-                            </td>
-                            <td>
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <div style="width: 100%; background-color: #eee; border-radius: 3px; overflow: hidden; height: 25px;">
-                                        <div class="progress-bar" style="width: {{ $maxCountMonthly > 0 ? ($data['total'] / $maxCountMonthly) * 100 : 0 }}%; height: 100%;"></div>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
+
 </div>
 
 @endsection

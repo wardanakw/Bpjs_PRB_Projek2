@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Models\Faskes;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class AdminFaskesController extends Controller
@@ -51,17 +50,12 @@ class AdminFaskesController extends Controller
             
             return view('admin.faskes.create', compact('relasi'));
         } catch (\Exception $e) {
-            Log::error('Error loading faskes create form: ' . $e->getMessage());
-            return back()->with('error', 'Gagal memuat form: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memuat form');
         }
     }
 
     public function store(Request $request)
     {
-        
-        Log::info('=== FASKES STORE PROCESS START ===');
-        Log::info('Request Data:', $request->except(['password', '_token']));
-        
         DB::beginTransaction();
         
         try {
@@ -97,9 +91,6 @@ class AdminFaskesController extends Controller
                 $kodeFaskes = $request->kode_apotek;
                 $kodeApotek = $request->kode_apotek;
                 
-                Log::info('Processing APOTEK with kode: ' . $kodeFaskes);
-                
-                // Cek duplikasi
                 $existingFaskes = Faskes::where('kode_faskes', $kodeFaskes)->first();
                 if ($existingFaskes) {
                     throw ValidationException::withMessages([
@@ -107,27 +98,18 @@ class AdminFaskesController extends Controller
                     ]);
                 }
             } else {
-                // Validasi untuk non-apotek (FKTP & Rumah Sakit)
+        
                 $request->validate([
                     'kode_faskes' => 'required|string|max:20|unique:faskes,kode_faskes',
                 ]);
                 
                 $kodeFaskes = $request->kode_faskes;
                 $kodeApotek = null;
-                
-                Log::info('Processing ' . strtoupper($request->role) . ' with kode: ' . $kodeFaskes);
             }
-            
-            // Tambahkan kode ke validated data
+    
             $validated['kode_faskes'] = $kodeFaskes;
             $validated['kode_apotek'] = $kodeApotek;
             
-            Log::info('Final validated data:', [
-                'role' => $validated['role'],
-                'kode_faskes' => $validated['kode_faskes'],
-                'kode_apotek' => $validated['kode_apotek']
-            ]);
-        
             $userData = [
                 'name'     => $validated['name'],
                 'username' => $validated['username'],
@@ -135,7 +117,6 @@ class AdminFaskesController extends Controller
                 'role'     => $validated['role'],
             ];
             
-            // Tambahkan kode khusus berdasarkan role
             switch ($validated['role']) {
                 case 'fktp':
                     $userData['fktp_kode'] = $validated['kode_faskes'];
@@ -146,7 +127,6 @@ class AdminFaskesController extends Controller
             }
             
             $user = User::create($userData);
-            Log::info('User created successfully - ID: ' . $user->id_user);
             
             $faskesData = [
                 'kode_faskes'  => $validated['kode_faskes'],
@@ -165,18 +145,13 @@ class AdminFaskesController extends Controller
             ];
             
             $faskes = Faskes::create($faskesData);
-            Log::info('Faskes created successfully - ID: ' . $faskes->id);
             
-            // Update rumah_sakit_id jika role rumah sakit
             if ($validated['role'] === 'rumah_sakit') {
                 $user->update(['rumah_sakit_id' => $faskes->id]);
-                Log::info('Updated rumah_sakit_id for user: ' . $user->id_user);
             }
             
-            // Commit transaction
+        
             DB::commit();
-            
-            Log::info('=== FASKES STORE PROCESS COMPLETED SUCCESSFULLY ===');
             
             return redirect()
                 ->route('admin.faskes.index')
@@ -185,7 +160,6 @@ class AdminFaskesController extends Controller
                 
         } catch (ValidationException $e) {
             DB::rollBack();
-            Log::error('Validation Error: ' . json_encode($e->errors()));
             
             return back()
                 ->withErrors($e->errors())
@@ -194,8 +168,6 @@ class AdminFaskesController extends Controller
                 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Store Error: ' . $e->getMessage());
-            Log::error('Error Trace: ' . $e->getTraceAsString());
             
             return back()
                 ->withInput($request->except(['password']))
@@ -218,45 +190,68 @@ class AdminFaskesController extends Controller
 
     public function update(Request $request, $id)
     {
+      
         $faskes = Faskes::findOrFail($id);
         $user = $faskes->user;
-        $request->validate([
-            'nama_faskes' => 'required',
-            'jenis_faskes' => 'required',
-            'alamat_faskes' => 'required',
-
-            'username' => 'required|unique:users,username,' . $user->id_user . ',id_user',
-
-            'kode_faskes' => $request->role === 'fktp'
-                                ? 'required'
-                                : 'nullable',
-
-            'kode_apotek' => $request->role === 'apotek'
-                                ? 'required'
-                                : 'nullable',
-        ]);
+        
+        $rules = [
+            'name'         => 'required|string|max:100',
+            'nama_faskes'  => 'required|string|max:150',
+            'jenis_faskes' => 'required|string|max:50',
+            'alamat_faskes'=> 'required|string|max:255',
+            'kecamatan'    => 'nullable|string|max:50',
+            'kabupaten'    => 'nullable|string|max:50',
+            'provinsi'     => 'nullable|string|max:50',
+            'kode_pos'     => 'nullable|string|max:10|regex:/^[0-9]+$/',
+            'nomor_pic'    => 'nullable|string|max:15|regex:/^[0-9]+$/',
+            'username'     => 'required|unique:users,username,' . $user->id_user . ',id_user',
+            'password'     => 'nullable|string|min:6|max:100',
+        ];
+        
+       
+        if ($user->role === 'fktp') {
+            $rules['kode_faskes'] = 'required|string|max:20';
+        } elseif ($user->role === 'apotek') {
+            $rules['kode_apotek'] = 'required|string|max:20';
+        } elseif ($user->role === 'rumah_sakit') {
+            $rules['kode_faskes'] = 'required|string|max:20';
+        }
+        
+        $validated = $request->validate($rules);
 
         $user->update([
-            'username'    => $request->username,
-            'fktp_kode'   => $request->role === 'fktp' ? $request->kode_faskes : null,
-            'kode_apotek' => $request->role === 'apotek' ? $request->kode_apotek : null,
+            'name'        => $validated['name'],
+            'username'    => $validated['username'],
+            'fktp_kode'   => $user->role === 'fktp' ? $validated['kode_faskes'] : null,
+            'kode_apotek' => $user->role === 'apotek' ? $validated['kode_apotek'] : null,
+            'rumah_sakit_id' => $user->role === 'rumah_sakit' ? $faskes->id : $user->rumah_sakit_id,
         ]);
 
         if ($request->filled('password')) {
-            $user->update(['password' => Hash::make($request->password)]);
+            $user->update(['password' => Hash::make($validated['password'])]);
         }
 
-        $faskes->update([
-            'fktp_kode'   => $request->role === 'fktp' ? $request->kode_faskes : null,
-            'kode_apotek' => $request->role === 'apotek' ? $request->kode_apotek : null,
-            'nama_faskes' => $request->nama_faskes,
-            'jenis_faskes'=> $request->jenis_faskes,
-            'alamat_faskes'=> $request->alamat_faskes,
-            'kecamatan'   => $request->kecamatan,
-            'kabupaten'   => $request->kabupaten,
-            'provinsi'    => $request->provinsi,
-            'kode_pos'    => $request->kode_pos,
-        ]);
+        $faskesUpdate = [
+            'nama_faskes' => $validated['nama_faskes'],
+            'jenis_faskes'=> $validated['jenis_faskes'],
+            'alamat_faskes'=> $validated['alamat_faskes'],
+            'kecamatan'   => $validated['kecamatan'] ?? null,
+            'kabupaten'   => $validated['kabupaten'] ?? null,
+            'provinsi'    => $validated['provinsi'] ?? null,
+            'kode_pos'    => $validated['kode_pos'] ?? null,
+            'nomor_pic'   => $validated['nomor_pic'] ?? null,
+        ];
+
+        // Update kode_faskes berdasarkan role (kode_apotek hanya di users table)
+        if ($user->role === 'apotek') {
+            // Untuk apotek, gunakan kode dari users table
+            $faskesUpdate['kode_faskes'] = $user->kode_apotek;
+        } else {
+            // FKTP dan Rumah Sakit
+            $faskesUpdate['kode_faskes'] = $validated['kode_faskes'];
+        }
+
+        $faskes->update($faskesUpdate);
 
         return redirect()->route('admin.faskes.index')->with('success', 'Data faskes berhasil diperbarui.');
     }
