@@ -293,6 +293,13 @@
         <span>Kelola Faskes</span>
     </a>
 </li>
+<li class="nav-item">
+    <a href="{{ route('admin.relasi-fktp-apotek.index') }}"
+       class="nav-link {{ request()->routeIs('admin.relasi-fktp-apotek.*') ? 'active' : '' }}">
+        <i class="bi bi-link"></i>
+        <span>Tambah Mapping </span>
+    </a>
+</li>
 @endauth
 
     {{-- Menu khusus FKTP --}}
@@ -330,12 +337,12 @@
 
     {{-- Menu lain tetap sama --}}
 
-    <li>
+    <!-- <li>
         <a href="#">
             <i class="bi bi-info-circle"></i>
             <span>Tentang</span>
         </a>
-    </li>
+    </li> -->
 </ul>
 
     </div>

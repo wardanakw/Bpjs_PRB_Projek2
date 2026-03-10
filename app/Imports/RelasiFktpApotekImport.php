@@ -13,12 +13,10 @@ class RelasiFktpApotekImport implements OnEachRow, WithChunkReading
     {
         $r = $row->toArray();
 
-        // Skip header row (assuming first row is header)
         static $rowCount = 0;
         $rowCount++;
         if ($rowCount == 1) return;
 
-        // Lewati jika kolom 0 kosong
         if (empty($r[0])) return;
 
         RelasiFktpApotek::create([
@@ -31,6 +29,6 @@ class RelasiFktpApotekImport implements OnEachRow, WithChunkReading
 
     public function chunkSize(): int
     {
-        return 500; // proses per 500 baris → RAM aman
+        return 500; 
     }
 }

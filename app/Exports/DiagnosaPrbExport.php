@@ -34,7 +34,7 @@ class DiagnosaPrbExport implements FromCollection, WithHeadings
                 } elseif ($this->userRole === 'rumah_sakit') {
                     $query->where('patients.created_by', $this->ftpKode);
                 } elseif ($this->userRole === 'apotek') {
-                    // Apotek bisa akses semua
+                   
                 }
             }
 
@@ -57,7 +57,7 @@ class DiagnosaPrbExport implements FromCollection, WithHeadings
                     ];
                 });
         } catch (\Exception $e) {
-            return collect([]); // Return empty collection jika error
+            return collect([]); 
         }
     }
 

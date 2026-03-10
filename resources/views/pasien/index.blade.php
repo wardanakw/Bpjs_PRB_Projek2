@@ -238,7 +238,7 @@ th.sortable.desc::after {
                 <input type="text" id="searchInput" name="search" placeholder="Search" class="form-control" value="{{ request('search') }}">
             </div>
 
-            {{-- Filter Role (untuk rumah sakit) --}}
+            <!-- {{-- Filter Role (untuk rumah sakit) --}}
             @if(auth()->user()->role === 'rumah_sakit')
             <div class="input-group search-group">
                 <span class="input-group-text">
@@ -251,7 +251,7 @@ th.sortable.desc::after {
                     <option value="apotek" {{ request('input_role') === 'apotek' ? 'selected' : '' }}>Apotek</option>
                 </select>
             </div>
-            @endif
+            @endif -->
 
             <div class="date-filter d-flex align-items-center gap-2 flex-wrap">
                 <label class="fw-semibold mb-0 text-white">Periode Tanggal s/d</label>

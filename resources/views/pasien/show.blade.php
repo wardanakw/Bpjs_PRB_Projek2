@@ -253,7 +253,9 @@ body {
                                     <th>Dosis Obat</th>
                                     <th>File</th>
                                     <th>Bukti Bayar Apotek</th>
+                                    @if(auth()->user()->role !== 'fktp')
                                     <th>Aksi</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
@@ -316,9 +318,11 @@ body {
                                                 <span class="text-muted">-</span>
                                             @endif
                                         </td>
+                                        @if(auth()->user()->role !== 'fktp')
                                         <td>
                                             <a href="{{ route('pasien.edit', $pasien->id_pasien) }}" class="btn btn-sm btn-primary">Edit</a>
                                         </td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -355,7 +359,9 @@ body {
                                     @if(auth()->user()->role === 'admin')
                                     <th>Bukti Bayar Apotek</th>
                                     @endif
+                                    @if(auth()->user()->role !== 'fktp')
                                     <th>Aksi</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
@@ -430,9 +436,11 @@ body {
                                 </td>
                                 @endif
 
+                                @if(auth()->user()->role !== 'fktp')
                                         <td>
                                             <a href="{{ route('pasien.edit', $pasien->id_pasien) }}" class="btn btn-sm btn-primary">Edit</a>
                                         </td>
+                                @endif
                                     </tr>
                                 @endforeach
                             </tbody>

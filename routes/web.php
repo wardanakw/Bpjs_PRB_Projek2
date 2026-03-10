@@ -50,6 +50,8 @@ Route::middleware(['multiauth:admin,rumah_sakit', 'role:admin,rumah_sakit'])->gr
         Route::get('/faskes/{id}', [AdminFaskesController::class, 'show'])->name('faskes.show');
         Route::put('/faskes/{id}', [AdminFaskesController::class, 'update'])->name('faskes.update');
         Route::delete('/faskes/{id}', [AdminFaskesController::class, 'destroy'])->name('faskes.destroy');
+
+        Route::resource('relasi-fktp-apotek', \App\Http\Controllers\Admin\RelasiFktpApotekController::class);
     });
 
     Route::prefix('pasien')->name('pasien.')->group(function () {

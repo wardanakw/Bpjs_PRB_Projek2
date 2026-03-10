@@ -10,6 +10,9 @@ class RelasiFktpApotek extends Model
     use HasFactory;
 
     protected $table = 'relasi_fktp_apotek';
+    protected $primaryKey = 'id_relasi';
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
         'kode_fktp',

@@ -18,10 +18,8 @@ class RelasiFktpApotekSeeder extends Seeder
             return;
         }
 
-        // Bersihkan tabel sebelum import
         DB::table('relasi_fktp_apotek')->truncate();
 
-        // Import menggunakan CHUNK → anti memory limit
         Excel::import(new RelasiFktpApotekImport, $filePath);
 
         echo "✔ Import sukses!\n";

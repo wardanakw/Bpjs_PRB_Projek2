@@ -219,7 +219,6 @@ body {
                                     <th>Status PRB</th>
                                     <th>Dosis Obat</th>
                                     <th>File</th>
-                                    <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -304,8 +303,6 @@ body {
                                                         <span class="badge bg-secondary">Sudah Diklaim</span>
                                                     @endif
                                                 @endif
-                                            @else
-                                                <a href="{{ route('pasien.edit', $pasien->id_pasien) }}" class="btn btn-sm btn-primary">Edit</a>
                                             @endif
                                         </td>
                                     </tr>
@@ -334,7 +331,6 @@ body {
                                     <th>Status PRB</th>
                                     <th>Dosis Obat</th>
                                     <th>File</th>
-                                    <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -395,9 +391,6 @@ body {
         <span class="text-muted">Tidak ada</span>
     @endif
 </td>
-                                        <td>
-                                            <a href="{{ route('pasien.edit', $pasien->id_pasien) }}" class="btn btn-sm btn-primary">Edit</a>
-                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>

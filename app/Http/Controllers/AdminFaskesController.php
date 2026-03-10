@@ -242,12 +242,10 @@ class AdminFaskesController extends Controller
             'nomor_pic'   => $validated['nomor_pic'] ?? null,
         ];
 
-        // Update kode_faskes berdasarkan role (kode_apotek hanya di users table)
+    
         if ($user->role === 'apotek') {
-            // Untuk apotek, gunakan kode dari users table
             $faskesUpdate['kode_faskes'] = $user->kode_apotek;
         } else {
-            // FKTP dan Rumah Sakit
             $faskesUpdate['kode_faskes'] = $validated['kode_faskes'];
         }
 
@@ -259,6 +257,15 @@ class AdminFaskesController extends Controller
     public function destroy($id)
     {
         $faskes = Faskes::findOrFail($id);
+
+        if ($faskes->user) {
+            $faskes->user->delete();
+        }
+
+        \App\Models\RelasiFktpApotek::where('nama_fktp', $faskes->nama_faskes)
+            ->orWhere('nama_apotek', $faskes->nama_faskes)
+            ->delete();
+
         $faskes->delete();
 
         return back()->with('success', 'Data berhasil dihapus.');
