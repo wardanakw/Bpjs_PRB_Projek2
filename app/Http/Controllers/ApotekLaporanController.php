@@ -26,7 +26,7 @@ class ApotekLaporanController extends Controller
             ->whereNotNull('obat_prb.tanggal_klaim')
             ->whereMonth('obat_prb.tanggal_klaim', $bulan)
             ->whereYear('obat_prb.tanggal_klaim', $tahun)
-            ->select('obat_prb.nama_obat', DB::raw('COUNT(*) as total'))
+            ->select('obat_prb.nama_obat', DB::raw('SUM(obat_prb.jumlah_obat) as total'))
             ->groupBy('obat_prb.nama_obat')
             ->orderByDesc('total')
             ->paginate(10);
@@ -39,7 +39,7 @@ class ApotekLaporanController extends Controller
             ->whereNotNull('obat_prb.tanggal_klaim')
             ->whereMonth('obat_prb.tanggal_klaim', $bulan)
             ->whereYear('obat_prb.tanggal_klaim', $tahun)
-            ->count();
+            ->sum('obat_prb.jumlah_obat');
 
         $namaBulan = [
             1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
@@ -100,7 +100,7 @@ class ApotekLaporanController extends Controller
             ->whereNotNull('obat_prb.tanggal_klaim')
             ->whereMonth('obat_prb.tanggal_klaim', $bulan)
             ->whereYear('obat_prb.tanggal_klaim', $tahun)
-            ->select('obat_prb.nama_obat', DB::raw('COUNT(*) as total'))
+            ->select('obat_prb.nama_obat', DB::raw('SUM(obat_prb.jumlah_obat) as total'))
             ->groupBy('obat_prb.nama_obat')
             ->orderByDesc('total')
             ->get();

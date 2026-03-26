@@ -6,6 +6,7 @@ use App\Models\Patient;
 use App\Models\ObatPrb;
 use App\Models\DiagnosaPrb;
 use App\Models\RelasiFktpApotek;
+use App\Models\PatientReferral;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -14,23 +15,28 @@ class PasienController extends Controller
 {
   public function index(Request $request)
 {
-    // Query untuk mendapatkan semua pasien (termasuk yang belum ada diagnosa)
     $query = Patient::with([
         'diagnosaPrb' => function ($q) {
             $q->orderByDesc('tgl_pelayanan')
-              ->latest(); // Ambil yang terbaru
+              ->latest(); 
         },
         'creator'
     ]);
 
-    // Filter berdasarkan role user
+  
     if (auth()->user()->role === 'rumah_sakit') {
         if (auth()->user()->rumah_sakit_id) {
             $userIds = \DB::table('users')
                 ->where('rumah_sakit_id', auth()->user()->rumah_sakit_id)
                 ->pluck('id_user');
             
-            $query->whereIn('created_by', $userIds);
+            // Rumah sakit bisa melihat pasien yang:
+            // 1. Dibuat oleh user di rumah sakit mereka, ATAU
+            // 2. Sedang ditangani oleh rumah sakit mereka (termasuk yang dirujuk)
+            $query->where(function ($q) use ($userIds) {
+                $q->whereIn('created_by', $userIds)
+                  ->orWhere('rumah_sakit_id', auth()->user()->rumah_sakit_id);
+            });
         }
     }
 
@@ -51,7 +57,7 @@ class PasienController extends Controller
         }
     }
 
-    // Filter input role (untuk rumah sakit)
+    
     if (auth()->user()->role === 'rumah_sakit' && $request->filled('input_role')) {
         $inputRole = $request->input_role;
         $query->whereHas('creator', function ($q) use ($inputRole) {
@@ -59,14 +65,14 @@ class PasienController extends Controller
         });
     }
 
-    // Filter tanggal
+
     if ($request->filled('start_date') && $request->filled('end_date')) {
         $query->where(function ($q) use ($request) {
-            // Untuk pasien yang punya diagnosa
+       
             $q->whereHas('diagnosaPrb', function ($diagnosaQuery) use ($request) {
                 $diagnosaQuery->whereBetween('tgl_pelayanan', [$request->start_date, $request->end_date]);
             })
-            // ATAU untuk pasien tanpa diagnosa, filter berdasarkan created_at pasien
+          
             ->orWhere(function ($orQuery) use ($request) {
                 $orQuery->doesntHave('diagnosaPrb')
                        ->whereBetween('created_at', [$request->start_date, $request->end_date]);
@@ -74,7 +80,7 @@ class PasienController extends Controller
         });
     }
 
-    // Search
+    
     if ($request->filled('search')) {
         $search = $request->search;
         $query->where(function ($q) use ($search) {
@@ -87,7 +93,6 @@ class PasienController extends Controller
         });
     }
 
-    // Sorting
     $sortBy = $request->get('sort', 'created_at');
     $direction = $request->get('direction', 'desc');
     
@@ -99,7 +104,7 @@ class PasienController extends Controller
         $query->orderBy('created_at', $direction);
     }
 
-    // Pagination - tambahkan distinct untuk menghindari duplikat
+    
     $pasiens = $query->distinct()->paginate(20);
 
     return view('pasien.index', compact('pasiens'));
@@ -173,7 +178,7 @@ public function create()
                 'created_by' => auth()->id(),
             ];
 
-            // Auto-fill rumah_sakit_id jika user adalah rumah_sakit
+            
             if (auth()->user()->role === 'rumah_sakit' && auth()->user()->rumah_sakit_id) {
                 $patientData['rumah_sakit_id'] = auth()->user()->rumah_sakit_id;
             }
@@ -224,7 +229,13 @@ public function create()
             ->where('rumah_sakit_id', auth()->user()->rumah_sakit_id)
             ->pluck('id_user');
         
-        if (!$userIds->contains($pasien->created_by)) {
+        // Rumah sakit bisa mengakses pasien yang:
+        // 1. Dibuat oleh user di rumah sakit mereka, ATAU
+        // 2. Sedang ditangani oleh rumah sakit mereka
+        $hasAccess = $userIds->contains($pasien->created_by) || 
+                    $pasien->rumah_sakit_id == auth()->user()->rumah_sakit_id;
+        
+        if (!$hasAccess) {
             abort(403, 'Anda tidak memiliki akses ke data pasien ini.');
         }
     }
@@ -233,7 +244,7 @@ public function create()
     $obat = $diagnosa ? $diagnosa->obatPrb : collect();
     $fktp = RelasiFktpApotek::orderBy('nama_fktp')->get();
 
-    // Get nomor_pic from faskes of logged-in user
+
     $farkes = \App\Models\Faskes::where('user_id', auth()->user()->id_user)->first();
     $nomorPic = $farkes ? $farkes->nomor_pic : null;
 
@@ -243,6 +254,22 @@ public function create()
   public function update(Request $request, $id)
 {
     $pasien = Patient::findOrFail($id);
+
+    if (auth()->user()->role === 'rumah_sakit') {
+        $userIds = \DB::table('users')
+            ->where('rumah_sakit_id', auth()->user()->rumah_sakit_id)
+            ->pluck('id_user');
+        
+        // Rumah sakit bisa mengakses pasien yang:
+        // 1. Dibuat oleh user di rumah sakit mereka, ATAU
+        // 2. Sedang ditangani oleh rumah sakit mereka
+        $hasAccess = $userIds->contains($pasien->created_by) || 
+                    $pasien->rumah_sakit_id == auth()->user()->rumah_sakit_id;
+        
+        if (!$hasAccess) {
+            abort(403, 'Anda tidak memiliki akses ke data pasien ini.');
+        }
+    }
 
     $request->validate([
         'no_sep' => 'required|string',
@@ -419,14 +446,23 @@ public function create()
 
     public function show($id)
     {
-        $pasien = Patient::findOrFail($id);
+        $pasien = Patient::with(['diagnosaPrb' => function ($q) {
+            $q->orderByDesc('tgl_pelayanan')
+              ->latest(); 
+        }, 'referrals.rsAsal', 'referrals.rsTujuan'])->findOrFail($id);
         
         if (auth()->user()->role === 'rumah_sakit') {
             $userIds = \DB::table('users')
                 ->where('rumah_sakit_id', auth()->user()->rumah_sakit_id)
                 ->pluck('id_user');
             
-            if (!$userIds->contains($pasien->created_by)) {
+            // Rumah sakit bisa melihat pasien yang:
+            // 1. Dibuat oleh user di rumah sakit mereka, ATAU
+            // 2. Sedang ditangani oleh rumah sakit mereka (termasuk yang dirujuk)
+            $hasAccess = $userIds->contains($pasien->created_by) || 
+                        $pasien->rumah_sakit_id == auth()->user()->rumah_sakit_id;
+            
+            if (!$hasAccess) {
                 abort(403, 'Anda tidak memiliki akses ke data pasien ini.');
             }
         }
@@ -465,7 +501,13 @@ public function create()
                 ->where('rumah_sakit_id', auth()->user()->rumah_sakit_id)
                 ->pluck('id_user');
 
-            if (!$userIds->contains($pasien->created_by)) {
+            // Rumah sakit bisa mengakses pasien yang:
+            // 1. Dibuat oleh user di rumah sakit mereka, ATAU
+            // 2. Sedang ditangani oleh rumah sakit mereka
+            $hasAccess = $userIds->contains($pasien->created_by) || 
+                        $pasien->rumah_sakit_id == auth()->user()->rumah_sakit_id;
+            
+            if (!$hasAccess) {
                 abort(403, 'Anda tidak memiliki akses ke data pasien ini.');
             }
         }
@@ -493,7 +535,13 @@ public function create()
                 ->where('rumah_sakit_id', auth()->user()->rumah_sakit_id)
                 ->pluck('id_user');
 
-            if (!$userIds->contains($pasien->created_by)) {
+            // Rumah sakit bisa mengakses pasien yang:
+            // 1. Dibuat oleh user di rumah sakit mereka, ATAU
+            // 2. Sedang ditangani oleh rumah sakit mereka
+            $hasAccess = $userIds->contains($pasien->created_by) || 
+                        $pasien->rumah_sakit_id == auth()->user()->rumah_sakit_id;
+            
+            if (!$hasAccess) {
                 abort(403, 'Anda tidak memiliki akses ke data pasien ini.');
             }
         }
@@ -552,5 +600,66 @@ public function create()
         }
 
         return redirect()->route('pasien.show', $pasien->id_pasien)->with('success', 'Diagnosis baru berhasil ditambahkan ke riwayat pasien.');
+    }
+
+    public function referPatient(Request $request, $id)
+    {
+        $request->validate([
+            'rs_tujuan' => 'required|exists:faskes,id',
+            'alasan_rujukan' => 'required|string',
+            'tanggal_rujukan' => 'required|date',
+        ]);
+
+        $pasien = Patient::findOrFail($id);
+
+        // Pastikan user memiliki akses
+        if (auth()->user()->role === 'rumah_sakit') {
+            if ($pasien->rumah_sakit_id !== auth()->user()->rumah_sakit_id) {
+                abort(403, 'Anda tidak memiliki akses untuk merujuk pasien ini.');
+            }
+        }
+
+        // Insert riwayat rujukan
+        PatientReferral::create([
+            'id_pasien' => $pasien->id_pasien,
+            'rs_asal' => $pasien->rumah_sakit_id,
+            'rs_tujuan' => $request->rs_tujuan,
+            'tanggal_rujukan' => $request->tanggal_rujukan,
+            'alasan_rujukan' => $request->alasan_rujukan,
+            'status_rujukan' => 'pending',
+        ]);
+
+        // Update rumah_sakit_id pasien ke rs_tujuan
+        $pasien->update(['rumah_sakit_id' => $request->rs_tujuan]);
+
+        return redirect()->route('pasien.show', $pasien->id_pasien)->with('success', 'Pasien berhasil dirujuk.');
+    }
+
+    public function approveReferral(Request $request, $referralId)
+    {
+        $request->validate([
+            'status_rujukan' => 'required|in:pending,diterima,ditolak,selesai',
+        ]);
+
+        $referral = PatientReferral::findOrFail($referralId);
+
+        // Pastikan user memiliki akses (misalnya rumah sakit tujuan)
+        if (auth()->user()->role === 'rumah_sakit') {
+            if ($referral->rs_tujuan !== auth()->user()->rumah_sakit_id) {
+                abort(403, 'Anda tidak memiliki akses untuk mengupdate status rujukan ini.');
+            }
+        }
+
+        // Update status
+        $referral->update(['status_rujukan' => $request->status_rujukan]);
+
+        $statusText = [
+            'pending' => 'Pending',
+            'diterima' => 'Diterima',
+            'ditolak' => 'Ditolak',
+            'selesai' => 'Selesai'
+        ];
+
+        return redirect()->back()->with('success', 'Status rujukan telah diupdate menjadi: ' . $statusText[$request->status_rujukan]);
     }
 }

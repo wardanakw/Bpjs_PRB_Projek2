@@ -65,12 +65,14 @@ Route::middleware(['multiauth:admin,rumah_sakit', 'role:admin,rumah_sakit'])->gr
         Route::post('/{id}/store-diagnosis', [PasienController::class, 'storeDiagnosis'])->name('storeDiagnosis');
         Route::delete('/{id}', [PasienController::class, 'destroy'])->name('destroy');
 
-        Route::get('/diagnosa/file/{id}', [PasienController::class, 'showFile'])->name('diagnosa.file');
         Route::post('/diagnosa/store', [PasienController::class, 'storeDiagnosa'])->name('diagnosa.store');
         Route::put('/diagnosa/{id_diagnosa}/update', [PasienController::class, 'updateDiagnosa'])->name('diagnosa.update');
 
         Route::post('/obat/store', [PasienController::class, 'storeObat'])->name('obat.store');
         Route::put('/obat/{id_obat}/update', [PasienController::class, 'updateObat'])->name('obat.update');
+
+        Route::post('/{id}/refer', [PasienController::class, 'referPatient'])->name('refer');
+        Route::post('/referral/{referralId}/approve', [PasienController::class, 'approveReferral'])->name('referral.approve');
 
    // Route::get('/search-fktp', [RelasiFktpApotekController::class, 'search'])->name('search.fktp');
 
@@ -122,6 +124,7 @@ Route::middleware(['auth:apotek', 'role:apotek', 'EnsureApotekGuard'])->group(fu
 });
 
 Route::middleware(['multiauth:admin,rumah_sakit,fktp,apotek'])->group(function () {
+    Route::get('/pasien/diagnosa/file/{id}', [PasienController::class, 'showFile'])->name('pasien.diagnosa.file');
     Route::get('/exports/laporan', [LaporanController::class, 'index'])->name('exports.laporan');
     Route::get('/exports/laporan/export', [LaporanController::class, 'exportExcel'])->name('laporan.export');
     Route::get('/exports/download-pdf/{filename}', [LaporanController::class, 'downloadPdf'])->name('laporan.download.pdf');

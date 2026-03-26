@@ -243,19 +243,19 @@
 
                     <div class="col-md-12 mb-3">
                         <label>Upload Hasil Pemeriksaan</label>
-                        <input type="file" class="form-control @error('file_upload') is-invalid @enderror" name="file_upload">
-                        <small class="text-muted d-block mt-1">Format: PDF, JPG, PNG, DOC, DOCX (Max 2MB)</small>
-                        @error('file_upload')
-                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                        @enderror
-                        
-                        @if($diagnosa?->file_upload)
-                            <div class="alert alert-success alert-sm mt-2 mb-0 p-2" role="alert">
-                                <i class="bi bi-check-circle"></i>
-                                <strong>File tersimpan:</strong> {{ $diagnosa?->file_upload }}
+                        @if(!$diagnosa?->file_upload)
+                            <input type="file" class="form-control @error('file_upload') is-invalid @enderror" name="file_upload">
+                            <small class="text-muted d-block mt-1">Format: PDF, JPG, PNG, DOC, DOCX (Max 2MB)</small>
+                            @error('file_upload')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        @else
+                            <div class="alert alert-info alert-sm mt-2 mb-0 p-2" role="alert">
+                                <i class="bi bi-info-circle"></i>
+                                <strong>File sudah diupload:</strong> {{ $diagnosa->file_upload }}
                                 <a href="{{ route('pasien.diagnosa.file', $diagnosa->id_diagnosa) }}"
                                    class="btn btn-sm btn-outline-primary ms-2" target="_blank">
-                                    <i class="bi bi-download"></i> Lihat File
+                                    <i class="bi bi-eye"></i> Lihat File
                                 </a>
                             </div>
                         @endif
