@@ -29,8 +29,6 @@ class SettingController extends Controller
 
             $user->name = $request->name;
             $user->save();
-
-            // Refresh the authenticated user session
             Auth::login($user);
 
             return response()->json(['success' => true, 'message' => 'Name berhasil diupdate.']);

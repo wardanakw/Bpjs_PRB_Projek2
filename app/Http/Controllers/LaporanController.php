@@ -32,7 +32,7 @@ class LaporanController extends Controller
                 } elseif ($currentUser->role === 'rumah_sakit') {
                     $query->where('patients.created_by', $currentUser->id_user);
                 } elseif ($currentUser->role === 'apotek') {
-                    // Apotek bisa melihat semua data
+                    
                 }
             }
 

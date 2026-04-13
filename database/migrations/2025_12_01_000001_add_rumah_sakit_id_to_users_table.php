@@ -11,12 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Check if column doesn't exist to avoid duplicate column error
         if (!Schema::hasColumn('users', 'rumah_sakit_id')) {
             Schema::table('users', function (Blueprint $table) {
                 $table->unsignedBigInteger('rumah_sakit_id')->nullable()->after('role');
                 
-                // Add foreign key constraint
                 $table->foreign('rumah_sakit_id')
                     ->references('id')
                     ->on('faskes')

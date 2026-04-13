@@ -434,7 +434,7 @@
         </script>
 
         @if(Auth::check() && Auth::user()->role === 'apotek')
-                <!-- Upload PDF modal for apotek -->
+                
                 <div class="modal fade" id="uploadPdfModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">

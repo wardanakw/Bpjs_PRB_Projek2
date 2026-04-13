@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Cek apakah kolom sudah ada
+       
         if (!Schema::hasColumn('users', 'rumah_sakit_id')) {
             Schema::table('users', function (Blueprint $table) {
                 $table->unsignedBigInteger('rumah_sakit_id')->nullable()->after('role');
-                
-                // Foreign key constraint
+            
                 $table->foreign('rumah_sakit_id')
                     ->references('id')
                     ->on('faskes')

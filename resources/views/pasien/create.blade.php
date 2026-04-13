@@ -123,37 +123,31 @@
         </div>
 
         <div class="col-md-6 mb-3">
-    <label>FKTP Asal</label>
-    <select id="fktp_asal" name="fktp_asal" class="form-control" required>
-        <option value="">-- Pilih FKTP Asal --</option>
+            <label>FKTP Asal</label>
+            <select id="fktp_asal" name="fktp_asal" class="form-control" required>
+                <option value="">-- Pilih FKTP Asal --</option>
 
-        @foreach($fktp as $row)
-            <option 
-                value="{{ $row->nama_fktp }}"
-                data-apotek="{{ $row->nama_apotek }}"
-                data-kode="{{ $row->kode_fktp ?? $row->fktp_kode ?? '' }}"
-                data-kode-apotek="{{ $row->kode_apotek }}"  
-                {{ old('fktp_asal', $patient->fktp_asal ?? '') == $row->nama_fktp ? 'selected' : '' }}
-            >
-                {{ $row->nama_fktp }}
-            </option>
-        @endforeach
-    </select>
-</div>
+                @foreach($fktp as $row)
+                    <option 
+                        value="{{ $row->nama_fktp }}"
+                        data-apotek="{{ $row->nama_apotek }}"
+                        data-kode="{{ $row->kode_fktp ?? $row->fktp_kode ?? '' }}"
+                        data-kode-apotek="{{ $row->kode_apotek }}"
+                        {{ old('fktp_asal', $patient->fktp_asal ?? '') == $row->nama_fktp ? 'selected' : '' }}
+                    >
+                        {{ $row->nama_fktp }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
 
-<input type="hidden" id="fktp_kode" name="fktp_kode" value="{{ old('fktp_kode', $patient->fktp_kode ?? '') }}">
-<input type="hidden" id="kode_apotek" name="kode_apotek" value="{{ old('kode_apotek', $patient->kode_apotek ?? '') }}">
+        <input type="hidden" id="fktp_kode" name="fktp_kode" value="{{ old('fktp_kode', $patient->fktp_kode ?? '') }}">
+        <input type="hidden" id="kode_apotek" name="kode_apotek" value="{{ old('kode_apotek', $patient->kode_apotek ?? '') }}">
 
-
-</div>
-
-<div class="col-md-6 mb-3">
-    <label>Nama Apotek</label>
-    
-    <input  type="text" id="nama_apotek" name="nama_apotek"class="form-control" value="{{ old('nama_apotek', $patient->nama_apotek ?? '') }}"  readonly>
-</div>
-
-
+        <div class="col-md-6 mb-3">
+            <label>Nama Apotek</label>
+            <input type="text" id="nama_apotek" name="nama_apotek" class="form-control" value="{{ old('nama_apotek', $patient->nama_apotek ?? '') }}" readonly>
+        </div>
     </div>
 
     <div class="text-end">
@@ -176,10 +170,8 @@
 <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-<!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<!-- Select2 -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
@@ -210,23 +202,21 @@ $(document).ready(function () {
         width: '100%'
     });
 
-   function updateApotekDanKode() {
-    let selected = $('#fktp_asal').find(':selected');
+    function updateApotekDanKode() {
+        let selected = $('#fktp_asal').find(':selected');
 
-    let apotek       = selected.data('apotek') || '';
-    let kodeFktp     = selected.data('kode') || '';
-    let kodeApotek   = selected.data('kode-apotek') || '';
+        let apotek = selected.attr('data-apotek') || '';
+        let kodeFktp = selected.attr('data-kode') || '';
+        let kodeApotek = selected.attr('data-kode-apotek') || '';
 
-    $('#nama_apotek').val(apotek);
-    $('#fktp_kode').val(kodeFktp);
-    $('#kode_apotek').val(kodeApotek); 
-}
+        $('#nama_apotek').val(apotek);
+        $('#fktp_kode').val(kodeFktp);
+        $('#kode_apotek').val(kodeApotek);
+    }
 
-    
-  $('#fktp_asal').on('change', function () {
-    updateApotekDanKode();
-});
-
+    $('#fktp_asal').on('change select2:select select2:unselect', function () {
+        updateApotekDanKode();
+    });
 
     updateApotekDanKode();
 
@@ -248,8 +238,36 @@ $(document).ready(function () {
     @endif
 
 });
-
-
 </script>
+
+@if(session('warning'))
+<div class="modal fade" id="warningModal" tabindex="-1" aria-labelledby="warningModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-white" id="warningModalLabel">
+                    <i class="bi bi-exclamation-triangle"></i> Peringatan
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">{{ session('warning') }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        @if(session('warning'))
+            var warningModal = new bootstrap.Modal(document.getElementById('warningModal'));
+            warningModal.show();
+        @endif
+    });
+</script>
+@endif
 
 @endsection

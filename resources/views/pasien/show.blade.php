@@ -208,7 +208,7 @@ body {
                         <p><strong>Nama Lengkap </strong> {{ $pasien->nama_pasien }}</p>
                         <p><strong>No Telp WA </strong> {{ $pasien->no_telp }}</p>
                         <p><strong>No Kunjungan </strong> {{ $pasien->no_kunjungan ?? '-' }}</p>
-                        <p><strong>RS Pengelola PRB </strong> {{ $pasien->rsPengelola?->nama_faskes ?? '-' }}</p>
+                        <p><strong>RS Asal </strong> {{ $pasien->rsPengelola?->nama_faskes ?? $pasien->rumahSakit?->nama_faskes ?? '-' }}</p>
                     </div>
                 </div>
             </div>
@@ -229,19 +229,9 @@ body {
                         Riwayat PRB
                     </button>
                 </li>
-                <li class="nav-item">
-                    <button class="nav-link" id="rujukan-tab" data-bs-toggle="tab" data-bs-target="#rujukan" type="button">
-                        Riwayat Rujukan
-                    </button>
-                </li>
             </ul>
             @if(auth()->user()->role !== 'fktp' && auth()->user()->role !== 'apotek')
             <div class="d-flex gap-2">
-                @if(auth()->user()->role === 'rumah_sakit')
-                <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#referralModal">
-                    <i class="bi bi-arrow-right-circle me-1"></i> Rujuk Pasien
-                </button>
-                @endif
                 <button class="btn btn-outline-primary" onclick="window.location.href='{{ route('pasien.addDiagnosis', $pasien->id_pasien) }}'">
                     <i class="bi bi-plus-lg me-1"></i> Tambah Diagnosis Baru
                 </button>
@@ -397,7 +387,7 @@ body {
             <i class="bi bi-eye"></i> Lihat Obat ({{ $diagnosa->obatPrb->count() }})
         </button>
 
-        <!-- Modal: Obat per Diagnosa -->
+        
         <div class="modal fade" id="obatModal-{{ $diagnosa->id_diagnosa }}" tabindex="-1" aria-labelledby="obatModalLabel-{{ $diagnosa->id_diagnosa }}" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
@@ -466,117 +456,11 @@ body {
                     <p class="text-muted">Belum ada riwayat PRB.</p>
                 @endif
             </div>
-
-            <div class="tab-pane fade" id="rujukan">
-                @if($pasien->referrals->count() > 0)
-                    <div class="table-responsive">
-                        <table class="table align-middle text-center">
-                            <thead>
-                                <tr>
-                                    <th>Tanggal Rujukan</th>
-                                    <th>RS Asal</th>
-                                    <th>RS Tujuan</th>
-                                    <th>Alasan Rujukan</th>
-                                    <th>Status</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($pasien->referrals as $referral)
-                                    <tr>
-                                        <td>{{ \Carbon\Carbon::parse($referral->tanggal_rujukan)->format('d M Y') }}</td>
-                                        <td>{{ $referral->rsAsal?->nama_faskes ?? '-' }}</td>
-                                        <td>{{ $referral->rsTujuan?->nama_faskes ?? '-' }}</td>
-                                        <td>{{ $referral->alasan_rujukan }}</td>
-                                        <td>
-                                            <span class="badge {{ in_array($referral->status_rujukan, ['selesai', 'diterima']) ? 'bg-success' : ($referral->status_rujukan == 'pending' ? 'bg-warning' : ($referral->status_rujukan == 'ditolak' ? 'bg-danger' : 'bg-secondary')) }}">
-                                                {{ ucfirst($referral->status_rujukan) }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            @if(auth()->user()->role === 'rumah_sakit' && $referral->rs_tujuan == auth()->user()->rumah_sakit_id)
-                                                <form action="{{ route('pasien.referral.approve', $referral->id) }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    @method('POST')
-                                                    <div class="d-flex align-items-center gap-1">
-                                                        <select name="status_rujukan" class="form-select form-select-sm" style="width: 120px; font-size: 12px; padding: 2px 6px;" required>
-                                                            <option value="pending" {{ $referral->status_rujukan == 'pending' ? 'selected' : '' }}>Pending</option>
-                                                            <option value="diterima" {{ $referral->status_rujukan == 'diterima' ? 'selected' : '' }}>Diterima</option>
-                                                            <option value="ditolak" {{ $referral->status_rujukan == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
-                                                            <option value="selesai" {{ $referral->status_rujukan == 'selesai' ? 'selected' : '' }}>Selesai</option>
-                                                        </select>
-                                                        <button type="submit" class="btn btn-success btn-sm" style="padding: 2px 6px; font-size: 12px;">
-                                                            <i class="bi bi-check"></i>
-                                                        </button>
-                                                    </div>
-                                                </form>
-                                            @else
-                                                -
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @else
-                    <p class="text-muted">Belum ada riwayat rujukan.</p>
-                @endif
-            </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Rujukan -->
-@if(auth()->user()->role === 'rumah_sakit')
-<div class="modal fade" id="referralModal" tabindex="-1" aria-labelledby="referralModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="referralModalLabel">Rujuk Pasien - {{ $pasien->nama_pasien }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{ route('pasien.refer', $pasien->id_pasien) }}" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label>RS Asal</label>
-                            <input type="text" class="form-control" value="{{ $pasien->rumahSakit?->nama_faskes ?? 'Tidak ada' }}" readonly>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label>RS Tujuan <span class="text-danger">*</span></label>
-                            <select name="rs_tujuan" class="form-select" required>
-                                <option value="">-- Pilih RS Tujuan --</option>
-                                @php
-                                    $currentRsId = $pasien->rumah_sakit_id;
-                                    $faskes = \App\Models\Faskes::where('jenis_faskes', 'Rumah Sakit')
-                                                              ->where('id', '!=', $currentRsId)
-                                                              ->get();
-                                @endphp
-                                @foreach($faskes as $rs)
-                                    <option value="{{ $rs->id }}">{{ $rs->nama_faskes }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label>Tanggal Rujukan <span class="text-danger">*</span></label>
-                            <input type="date" name="tanggal_rujukan" class="form-control" value="{{ date('Y-m-d') }}" required>
-                        </div>
-                        <div class="col-md-12 mb-3">
-                            <label>Alasan Rujukan <span class="text-danger">*</span></label>
-                            <textarea name="alasan_rujukan" class="form-control" rows="3" placeholder="Jelaskan alasan rujukan..." required></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-warning">Rujuk Pasien</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@endif
+
+
 
 @endsection

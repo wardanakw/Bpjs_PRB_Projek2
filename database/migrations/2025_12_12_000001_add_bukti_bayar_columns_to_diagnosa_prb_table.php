@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('diagnosa_prb', function (Blueprint $table) {
-            // Tambah kolom untuk bukti bayar PDF dan asal klaim
             if (!Schema::hasColumn('diagnosa_prb', 'bukti_bayar_pdf')) {
                 $table->string('bukti_bayar_pdf')->nullable()->after('file_upload');
             }

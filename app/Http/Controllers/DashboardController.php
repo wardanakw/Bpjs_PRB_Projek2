@@ -12,12 +12,11 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // Cek jika user adalah rumah sakit, redirect ke dashboard rumah sakit
+        
         if (auth()->check() && auth()->user()->role === 'rumah_sakit') {
             return redirect()->route('rumahsakit.dashboard');
         }
 
-        // Ambil semua data (untuk admin)
         $kunjunganBulanan = DiagnosaPrb::select(
             DB::raw("MONTH(tgl_pelayanan) as bulan"),
             DB::raw("COUNT(*) as total")
@@ -106,7 +105,7 @@ class DashboardController extends Controller
 
     public function data()
     {
-        // Untuk admin, ambil semua data
+        
         $kunjunganBulanan = DiagnosaPrb::select(
             DB::raw("MONTH(tgl_pelayanan) as bulan"),
             DB::raw("COUNT(*) as total")

@@ -19,15 +19,18 @@ class RumahSakitDashboardController extends Controller
     private function getDiagnosaQuery($rumahSakit)
     {
         return DiagnosaPrb::join('patients', 'diagnosa_prb.id_pasien', '=', 'patients.id_pasien')
-            ->where('patients.rumah_sakit_id', $rumahSakit->id);
+            ->where(function ($query) use ($rumahSakit) {
+                $query->where('patients.rs_pengelola_prb', $rumahSakit->id)
+                      ->orWhere(function ($query) use ($rumahSakit) {
+                          $query->whereNull('patients.rs_pengelola_prb')
+                                ->where('patients.rumah_sakit_id', $rumahSakit->id);
+                      });
+            });
     }
 
     public function index()
     {
-        // Ambil rumah sakit milik user yang login
         $rumahSakit = Faskes::where('user_id', auth()->id())->first();
-
-        // Jika user bukan admin RS, redirect
         if (!$rumahSakit) {
             return redirect()->route('dashboard.index');
         }
@@ -35,7 +38,6 @@ class RumahSakitDashboardController extends Controller
         $bulanIni = Carbon::now()->month;
         $tahunIni = Carbon::now()->year;
 
-        // ========== DATA UNTUK CHART BULANAN ==========
         $kunjunganBulanan = $this->getDiagnosaQuery($rumahSakit)
             ->select(
                 DB::raw("MONTH(diagnosa_prb.tgl_pelayanan) as bulan"),

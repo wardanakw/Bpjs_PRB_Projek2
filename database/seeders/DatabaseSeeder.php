@@ -11,7 +11,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Panggil seeder user yang sudah kamu buat
+        
         $this->call(UserSeeder::class);
          $this->call(RelasiFktpApotekSeeder::class);
     }
