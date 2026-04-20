@@ -10,20 +10,28 @@ class RelasiFktpApotekController extends Controller
 {
     public function search(Request $request)
     {
-        $keyword = $request->term;
+        $keyword = trim($request->term ?? '');
 
         try {
             $query = RelasiFktpApotek::query();
 
             $user = $request->user();
             if ($user && isset($user->role) && strtolower($user->role) === 'apotek') {
-                if (!empty($user->kode_apotek)) {
-                    $query->where(function ($q) use ($lkode) {
-                        $q->where('kode_apotek', $lkode)
-                           ->orWhereRaw("TRIM(LEADING '0' FROM kode_apotek) = TRIM(LEADING '0' FROM ?)", [$lkode]);
-                    });
-                } else {
+                $kodeApotek = trim($user->kode_apotek ?? '');
+                if (empty($kodeApotek)) {
                     return response()->json([]);
+                }
+
+                $query->where(function ($q) use ($kodeApotek) {
+                    $q->where('kode_apotek', $kodeApotek)
+                      ->orWhereRaw("TRIM(LEADING '0' FROM kode_apotek) = TRIM(LEADING '0' FROM ?)", [$kodeApotek]);
+                });
+
+                if ($keyword !== '') {
+                    $query->where(function ($q) use ($keyword) {
+                        $q->where('nama_fktp', 'LIKE', "%{$keyword}%")
+                          ->orWhere('kode_fktp', 'LIKE', "%{$keyword}%");
+                    });
                 }
             } else {
                 $query->where(function ($q) use ($keyword) {

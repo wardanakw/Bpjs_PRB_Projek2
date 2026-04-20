@@ -23,12 +23,12 @@ class RelasiFktpApotek extends Model
 
     public function fktp()
     {
-        return $this->belongsTo(Faskes::class, 'nama_fktp', 'nama_faskes');
+        return $this->belongsTo(Faskes::class, 'kode_fktp', 'kode_faskes');
     }
 
 
     public function apotek()
     {
-        return $this->belongsTo(Faskes::class, 'nama_apotek', 'nama_faskes');
+        return $this->belongsTo(Faskes::class, 'kode_apotek', 'kode_faskes');
     }
 }

@@ -33,11 +33,11 @@ class Faskes extends Model
    
     public function apotekRelasi()
     {
-        return $this->hasMany(RelasiFktpApotek::class, 'nama_fktp', 'nama_faskes');
+        return $this->hasMany(RelasiFktpApotek::class, 'kode_fktp', 'kode_faskes');
     }
 
     public function fktpRelasi()
     {
-        return $this->hasMany(RelasiFktpApotek::class, 'nama_apotek', 'nama_faskes');
+        return $this->hasMany(RelasiFktpApotek::class, 'kode_apotek', 'kode_faskes');
     }
 }

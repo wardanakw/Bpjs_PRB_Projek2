@@ -52,11 +52,11 @@
                                             @foreach($fktps as $fktp)
                                                 <tr class="fktp-row" data-fktp-nama="{{ strtolower($fktp->nama_faskes) }}" data-fktp-kode="{{ strtolower($fktp->kode_faskes) }}">
                                                     <td>
-                                                        <input class="form-check-input fktp-checkbox" type="checkbox" name="fktps[]" value="{{ $fktp->nama_faskes }}" 
+                                                        <input class="form-check-input fktp-checkbox" type="checkbox" name="fktps[]" value="{{ $fktp->kode_faskes }}" 
                                                                id="fktp_{{ $fktp->id }}"
                                                                data-nama="{{ $fktp->nama_faskes }}"
                                                                data-kode="{{ $fktp->kode_faskes }}"
-                                                               {{ in_array($fktp->nama_faskes, old('fktps', [])) ? 'checked' : '' }}>
+                                                               {{ in_array($fktp->kode_faskes, old('fktps', [])) ? 'checked' : '' }}>
                                                     </td>
                                                     <td>
                                                         <label for="fktp_{{ $fktp->id }}" class="form-check-label" style="cursor: pointer;">
@@ -119,11 +119,11 @@
                                             @foreach($apoteks as $apotek)
                                                 <tr class="apotek-row" data-apotek-nama="{{ strtolower($apotek->nama_faskes) }}" data-apotek-kode="{{ strtolower($apotek->kode_faskes) }}">
                                                     <td>
-                                                        <input class="form-check-input apotek-checkbox" type="checkbox" name="apoteks[]" value="{{ $apotek->nama_faskes }}" 
+                                                        <input class="form-check-input apotek-checkbox" type="checkbox" name="apoteks[]" value="{{ $apotek->kode_faskes }}" 
                                                                id="apotek_{{ $apotek->id }}"
                                                                data-nama="{{ $apotek->nama_faskes }}"
                                                                data-kode="{{ $apotek->kode_faskes }}"
-                                                               {{ in_array($apotek->nama_faskes, old('apoteks', [])) ? 'checked' : '' }}>
+                                                               {{ in_array($apotek->kode_faskes, old('apoteks', [])) ? 'checked' : '' }}>
                                                     </td>
                                                     <td>
                                                         <label for="apotek_{{ $apotek->id }}" class="form-check-label" style="cursor: pointer;">

@@ -80,35 +80,29 @@ class RelasiFktpApotekController extends Controller
                 'fktps_manual' => 'nullable|string',
             ]);
 
-            $fktps = $request->input('fktps', []);
-            if (empty($fktps) && $request->filled('fktps_manual')) {
-                $fktps = array_filter(array_map('trim', preg_split('/[\r\n,;]+/', $request->fktps_manual)));
+            $fktpCodes = $request->input('fktps', []);
+            if (empty($fktpCodes) && $request->filled('fktps_manual')) {
+                $fktpCodes = array_filter(array_map('trim', preg_split('/[\r\n,;]+/', $request->fktps_manual)));
             }
 
-            if (empty($fktps)) {
+            if (empty($fktpCodes)) {
                 return redirect()->back()->withErrors(['fktps' => 'Silakan pilih atau masukkan setidaknya satu FKTP.'])->withInput();
             }
 
             $created = 0;
-            foreach ($fktps as $nama_fktp) {
-            
-                $exists = RelasiFktpApotek::where('nama_fktp', $nama_fktp)
-                                          ->where('nama_apotek', $request->nama_apotek)
+            foreach ($fktpCodes as $kodeFktp) {
+                $exists = RelasiFktpApotek::where('kode_fktp', $kodeFktp)
+                                          ->where('kode_apotek', $request->kode_apotek)
                                           ->exists();
                 if (!$exists) {
-                   
-                    $fktpData = RelasiFktpApotek::where('nama_fktp', $nama_fktp)->first();
-                    $kodeFktp = $fktpData ? $fktpData->kode_fktp : '';
-                    
-                    if (!$kodeFktp) {
-                       
-                        $fktp = Faskes::where('nama_faskes', $nama_fktp)->first();
-                        $kodeFktp = $fktp ? $fktp->kode_faskes : $nama_fktp;
+                    $namaFktp = RelasiFktpApotek::where('kode_fktp', $kodeFktp)->value('nama_fktp');
+                    if (!$namaFktp) {
+                        $namaFktp = Faskes::where('kode_faskes', $kodeFktp)->value('nama_faskes') ?: $kodeFktp;
                     }
 
                     RelasiFktpApotek::create([
                         'kode_fktp' => $kodeFktp,
-                        'nama_fktp' => $nama_fktp,
+                        'nama_fktp' => $namaFktp,
                         'nama_apotek' => $request->nama_apotek,
                         'kode_apotek' => $request->kode_apotek,
                     ]);
@@ -127,36 +121,30 @@ class RelasiFktpApotekController extends Controller
                 'apoteks_manual' => 'nullable|string',
             ]);
 
-            $apoteks = $request->input('apoteks', []);
-            if (empty($apoteks) && $request->filled('apoteks_manual')) {
-                $apoteks = array_filter(array_map('trim', preg_split('/[\r\n,;]+/', $request->apoteks_manual)));
+            $apotekCodes = $request->input('apoteks', []);
+            if (empty($apotekCodes) && $request->filled('apoteks_manual')) {
+                $apotekCodes = array_filter(array_map('trim', preg_split('/[\r\n,;]+/', $request->apoteks_manual)));
             }
 
-            if (empty($apoteks)) {
+            if (empty($apotekCodes)) {
                 return redirect()->back()->withErrors(['apoteks' => 'Silakan pilih atau masukkan setidaknya satu Apotek.'])->withInput();
             }
 
             $created = 0;
-            foreach ($apoteks as $nama_apotek) {
-            
+            foreach ($apotekCodes as $kodeApotek) {
                 $exists = RelasiFktpApotek::where('kode_fktp', $request->kode_fktp)
-                                          ->where('nama_apotek', $nama_apotek)
+                                          ->where('kode_apotek', $kodeApotek)
                                           ->exists();
                 if (!$exists) {
-                
-                    $apotekData = RelasiFktpApotek::where('nama_apotek', $nama_apotek)->first();
-                    $kodeApotek = $apotekData ? $apotekData->kode_apotek : '';
-                    
-                    if (!$kodeApotek) {
-                      
-                        $apotek = Faskes::where('nama_faskes', $nama_apotek)->first();
-                        $kodeApotek = $apotek ? $apotek->kode_faskes : $nama_apotek;
+                    $namaApotek = RelasiFktpApotek::where('kode_apotek', $kodeApotek)->value('nama_apotek');
+                    if (!$namaApotek) {
+                        $namaApotek = Faskes::where('kode_faskes', $kodeApotek)->value('nama_faskes') ?: $kodeApotek;
                     }
 
                     RelasiFktpApotek::create([
                         'kode_fktp' => $request->kode_fktp,
                         'nama_fktp' => $request->nama_fktp,
-                        'nama_apotek' => $nama_apotek,
+                        'nama_apotek' => $namaApotek,
                         'kode_apotek' => $kodeApotek,
                     ]);
                     $created++;
@@ -195,14 +183,14 @@ class RelasiFktpApotekController extends Controller
             'kode_fktp' => 'required|string|max:50',
             'nama_fktp' => 'required|string|max:255',
             'nama_apotek' => 'required|string|max:255',
-            'kode_apotek' => 'nullable|string|max:50',
+            'kode_apotek' => 'required|string|max:50',
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $relasi->update($request->all());
+        $relasi->update($request->only(['kode_fktp', 'nama_fktp', 'nama_apotek', 'kode_apotek']));
 
         return redirect()->route('admin.relasi-fktp-apotek.index')->with('success', 'Relasi FKTP-Apotek berhasil diperbarui.');
     }

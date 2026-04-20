@@ -14,7 +14,7 @@ class RelasiFktpApotekSeeder extends Seeder
         $filePath = storage_path('app/public/Mapping.xlsx');
 
         if (!file_exists($filePath)) {
-            echo "❌ File Excel tidak ditemukan! → $filePath\n";
+            echo " File Excel tidak ditemukan! → $filePath\n";
             return;
         }
 
@@ -22,6 +22,6 @@ class RelasiFktpApotekSeeder extends Seeder
 
         Excel::import(new RelasiFktpApotekImport, $filePath);
 
-        echo "✔ Import sukses!\n";
+        echo " Import sukses!\n";
     }
 }
